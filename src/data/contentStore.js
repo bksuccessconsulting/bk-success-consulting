@@ -7,38 +7,92 @@ import {
 } from './content'
 
 const DEFAUTS = {
-  services: servicesDefaut,
-  formations: formationsDefaut,
-  equipe: equipeDefaut,
-  temoignages: temoignagesDefaut,
-  media: { heroVideoUrl: '' },
+  bksc_services: servicesDefaut,
+  bksc_formations: formationsDefaut,
+  bksc_equipe: equipeDefaut,
+  bksc_temoignages: temoignagesDefaut,
+  bksc_media: { heroVideoUrl: '' },
 }
 
 async function lire(cle) {
-  const { data, error } = await supabase.from('contenu_site').select('valeur').eq('cle', cle).maybeSingle()
-  if (error || !data) return DEFAUTS[cle]
-  return data.valeur
+  try {
+    const { data } = await supabase
+      .from('contenu_site').select('valeur').eq('cle', cle).maybeSingle()
+    if (data?.valeur) {
+      try { localStorage.setItem(cle, JSON.stringify(data.valeur)) } catch {}
+      return data.valeur
+    }
+  } catch {}
+  try {
+    const local = localStorage.getItem(cle)
+    if (local) return JSON.parse(local)
+  } catch {}
+  return DEFAUTS[cle] ?? null
 }
 
 async function ecrire(cle, valeur) {
-  const { error } = await supabase.from('contenu_site').upsert({ cle, valeur })
-  if (error) console.error('Erreur Supabase :', error.message)
-  return !error
+  try { localStorage.setItem(cle, JSON.stringify(valeur)) } catch {}
+  try {
+    const { error } = await supabase
+      .from('contenu_site')
+      .upsert({ cle, valeur, updated_at: new Date().toISOString() })
+    if (error) console.error('Supabase:', error.message)
+    return !error
+  } catch (e) {
+    console.error('Supabase:', e.message)
+    return false
+  }
 }
 
 export const store = {
-  getServices: () => lire('services'),
-  setServices: (v) => ecrire('services', v),
+  getServices: () => lire('bksc_services'),
+  setServices: (v) => ecrire('bksc_services', v),
+  getFormations: () => lire('bksc_formations'),
+  setFormations: (v) => ecrire('bksc_formations', v),
+  getEquipe: () => lire('bksc_equipe'),
+  setEquipe: (v) => ecrire('bksc_equipe', v),
+  getTemoignages: () => lire('bksc_temoignages'),
+  setTemoignages: (v) => ecrire('bksc_temoignages', v),
+  getMedia: () => lire('bksc_media'),
+  setMedia: (v) => ecrire('bksc_media', v),
 
-  getFormations: () => lire('formations'),
-  setFormations: (v) => ecrire('formations', v),
+  getAnnonces: async () => {
+    try {
+      const { data } = await supabase
+        .from('annonces').select('*').order('created_at', { ascending: false })
+      return data || []
+    } catch { return [] }
+  },
 
-  getEquipe: () => lire('equipe'),
-  setEquipe: (v) => ecrire('equipe', v),
+  getAnnoncesActives: async () => {
+    try {
+      const now = new Date().toISOString()
+      const { data } = await supabase
+        .from('annonces').select('*').eq('actif', true)
+        .or(`date_fin.is.null,date_fin.gt.${now}`)
+        .order('created_at', { ascending: false })
+      return data || []
+    } catch { return [] }
+  },
 
-  getTemoignages: () => lire('temoignages'),
-  setTemoignages: (v) => ecrire('temoignages', v),
+  addAnnonce: async (annonce) => {
+    try {
+      const { data, error } = await supabase.from('annonces').insert([annonce]).select()
+      return error ? null : data[0]
+    } catch { return null }
+  },
 
-  getMedia: () => lire('media'),
-  setMedia: (v) => ecrire('media', v),
+  updateAnnonce: async (id, updates) => {
+    try {
+      const { error } = await supabase.from('annonces').update(updates).eq('id', id)
+      return !error
+    } catch { return false }
+  },
+
+  deleteAnnonce: async (id) => {
+    try {
+      const { error } = await supabase.from('annonces').delete().eq('id', id)
+      return !error
+    } catch { return false }
+  },
 }

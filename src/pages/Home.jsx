@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import { cabinetInfo, stats, valeurs } from '../data/content'
 import { store } from '../data/contentStore'
-import heroVideo from '../assets/hero.mp4'
+import heroVideoLocal from '../assets/hero.mp4'
 
 const iconMap = { Calculator, FileText, Users, Scale, Search, Lightbulb }
 
@@ -44,14 +44,23 @@ export default function Home() {
   const [services, setServices] = useState([])
   const [formations, setFormations] = useState([])
   const [temoignages, setTemoignages] = useState([])
+  const [heroVideoUrl, setHeroVideoUrl] = useState(heroVideoLocal)
 
   useEffect(() => {
     let actif = true
-    Promise.all([store.getServices(), store.getFormations(), store.getTemoignages()])
-      .then(([s, f, t]) => {
-        if (!actif) return
-        setServices(s); setFormations(f); setTemoignages(t)
-      })
+    Promise.all([
+      store.getServices(),
+      store.getFormations(),
+      store.getTemoignages(),
+      store.getMedia(),
+    ]).then(([s, f, t, m]) => {
+      if (!actif) return
+      setServices(s)
+      setFormations(f)
+      setTemoignages(t)
+      // Si admin a uploadé une vidéo, elle prend la priorité
+      if (m?.heroVideoUrl) setHeroVideoUrl(m.heroVideoUrl)
+    })
     return () => { actif = false }
   }, [])
 
@@ -64,19 +73,14 @@ export default function Home() {
           autoPlay muted loop playsInline preload="auto"
           className="absolute inset-0 w-full h-full object-cover z-0"
         >
-          <source src={heroVideo} type="video/mp4" />
+          <source src={heroVideoUrl} type="video/mp4" />
         </video>
 
-        {/* Overlay léger — vidéo visible, texte lisible */}
         <div className="absolute inset-0 z-[1] bg-gradient-to-b from-[#065280]/50 via-[#065280]/30 to-[#065280]/70" />
-
-        {/* Glow décoratif */}
         <div className="absolute top-[-120px] left-[-120px] w-[400px] h-[400px] bg-[#C9A227]/15 blur-[120px] rounded-full z-[1]" />
         <div className="absolute bottom-[-120px] right-[-120px] w-[400px] h-[400px] bg-[#C9A227]/10 blur-[120px] rounded-full z-[1]" />
 
-        {/* Contenu */}
         <div className="relative z-10 text-center max-w-5xl px-4">
-
           <motion.div
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
             className="inline-block bg-[#C9A227]/20 border border-[#C9A227]/50 text-[#C9A227] px-5 py-2 rounded-full text-sm font-semibold mb-6"
