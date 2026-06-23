@@ -1,20 +1,27 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Calculator, FileText, Users, Scale, Search, Lightbulb, CheckCircle2, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { services } from '../data/content'
+import { store } from '../data/contentStore'
 
 const iconMap = { Calculator, FileText, Users, Scale, Search, Lightbulb }
 
 export default function Services() {
+  const [services, setServices] = useState([])
+
+  useEffect(() => {
+    let actif = true
+    store.getServices().then((data) => { if (actif) setServices(data) })
+    return () => { actif = false }
+  }, [])
+
   return (
     <div>
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-20 text-center">
         <div className="max-w-3xl mx-auto px-4">
           <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Ce que nous faisons</span>
           <h1 className="text-3xl md:text-5xl font-black text-white mt-2 mb-4">Nos Services</h1>
-          <p className="text-gray-200">
-            Un accompagnement complet : comptabilité, fiscalité, social, juridique, audit et conseil.
-          </p>
+          <p className="text-gray-200">Un accompagnement complet : comptabilité, fiscalité, social, juridique, audit et conseil.</p>
         </div>
       </section>
 
@@ -24,14 +31,8 @@ export default function Services() {
             const Icon = iconMap[service.icone] || Calculator
             const inverse = i % 2 === 1
             return (
-              <motion.div
-                key={service.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.05 }}
-                className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row ${inverse ? 'md:flex-row-reverse' : ''}`}
-              >
+              <motion.div key={service.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                className={`bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden flex flex-col md:flex-row ${inverse ? 'md:flex-row-reverse' : ''}`}>
                 <div className="md:w-1/3 bg-[#0A69AD] p-8 flex flex-col justify-center">
                   <div className="w-14 h-14 bg-[#C9A227] rounded-xl flex items-center justify-center mb-4">
                     <Icon className="text-[#065280]" size={26} />

@@ -8,40 +8,46 @@ export const cabinetInfo = {
   sloganAlternatif: "Comptez sur nous.",
   accroche: "Cabinet d'assistance aux entreprises — Comptabilité · Fiscalité · Juridique · Formation",
   baseline: "Efficacité, Qualité, Accessibilité, Confidentialité, confiance",
-  publicCible: "PME, TPE, cliniques, associations, porteurs de projets — Douala et Cameroun",
   anneeFondation: 2019,
   statutJuridique: "Société à Responsabilité Limitée (SARL) — Droit OHADA",
   rccm: "RC/DLN/2019/B/1069",
   niu: "M051912785954F",
-
-  // Directeur — nom personnel pas encore communiqué
   directeur: "[NOM DU DIRECTEUR]",
   titreDirecteur: "Directeur Général",
-
-  // Coordonnées
   adresse: "Ndogbong Citadelle, Douala, Région du Littoral, Cameroun",
   repere: "Ndogbong, à 100m de IPH",
   telephonePrincipal: "+237 657 37 89 27",
   telephoneSecondaire: "+237 673 40 92 31",
   whatsapp: "237657378927",
   email: "bksuccessconsulting@gmail.com",
-
   horaires: {
     semaine: "08h00 – 12h30  et  13h30 – 17h00",
-    samedi: "08h00 – 13h00 (si activité)",
+    samedi: "08h00 – 13h00",
     dimanche: "Fermé",
   },
 }
 
 // ============================================
-// CHARTE GRAPHIQUE OFFICIELLE
+// RÉSEAUX SOCIAUX
+// ============================================
+export const reseauxSociaux = {
+  facebook: "[LIEN PAGE FACEBOOK]",
+  whatsapp: "https://wa.me/237657378927",
+  linkedin: "[LIEN LINKEDIN]",
+  tiktok: "[LIEN TIKTOK]",
+  youtube: "[LIEN YOUTUBE]",
+  instagram: "[LIEN INSTAGRAM]",
+}
+
+// ============================================
+// CHARTE GRAPHIQUE
 // ============================================
 export const couleurs = {
-  bleuRoyal: "#0A69AD",   // Header, navbar, boutons CTA
-  or: "#C9A227",          // Mot "success", highlights, badges, prix
+  bleuRoyal: "#0A69AD",
+  or: "#C9A227",
   blanc: "#FFFFFF",
-  grisClair: "#F4F6F8",   // Sections alternées
-  bleuFonce: "#065280",   // Titres, liens hover
+  grisClair: "#F4F6F8",
+  bleuFonce: "#065280",
 }
 
 // ============================================
@@ -79,7 +85,7 @@ export const historique = [
 ]
 
 // ============================================
-// VALEURS FONDAMENTALES
+// VALEURS
 // ============================================
 export const valeurs = [
   {
@@ -105,7 +111,7 @@ export const valeurs = [
 ]
 
 // ============================================
-// SERVICES (6)
+// SERVICES
 // ============================================
 export const services = [
   {
@@ -114,9 +120,9 @@ export const services = [
     icone: "Calculator",
     accroche: "Nous tenons votre comptabilité avec la rigueur d'un grand cabinet et la proximité d'un partenaire de confiance.",
     items: [
-      "Tenue comptabilité générale SYSCOHADA révisé (achats, ventes, banque, caisse, OD)",
+      "Tenue comptabilité générale SYSCOHADA révisé",
       "Grand livre, balance mensuelle et rapprochement bancaire",
-      "Lettrage comptes clients/fournisseurs — suivi créances",
+      "Lettrage comptes clients/fournisseurs",
       "États financiers annuels : bilan, compte de résultat",
       "Tableau de bord mensuel de gestion",
     ],
@@ -129,7 +135,7 @@ export const services = [
     items: [
       "Télédéclaration TVA mensuelle sur portail DGI",
       "Acompte IS mensuel, précomptes et retenues à la source",
-      "Autres impôts : patentes, PSL, droits d'enregistrement, IGS",
+      "Autres impôts : patentes, PSL, droits d'enregistrement",
       "DSF annuelle complète (CF1, CF2, tableaux annexes)",
       "Représentation lors des contrôles fiscaux DGI",
     ],
@@ -138,7 +144,7 @@ export const services = [
     id: 3,
     titre: "Social & Paie",
     icone: "Users",
-    accroche: "De l'immatriculation CNPS à la gestion complète de votre paie — nous gérons vos obligations sociales.",
+    accroche: "De l'immatriculation CNPS à la gestion complète de votre paie.",
     items: [
       "Bulletins de salaire conformes Code du Travail camerounais",
       "Déclaration DIPE mensuel CNPS",
@@ -151,11 +157,11 @@ export const services = [
     id: 4,
     titre: "Juridique & Structuration",
     icone: "Scale",
-    accroche: "De la création d'entreprise à la restructuration — votre partenaire juridique en droit des affaires OHADA.",
+    accroche: "De la création d'entreprise à la restructuration en droit des affaires OHADA.",
     items: [
-      "Création d'entreprise : dossier CFCE complet, rédaction des statuts",
-      "PV d'Assemblée Générale Ordinaire (AGO) et Extraordinaire (AGE)",
-      "Modifications statutaires, augmentation / cession de capital",
+      "Création d'entreprise : dossier CFCE complet, statuts",
+      "PV d'Assemblée Générale Ordinaire et Extraordinaire",
+      "Modifications statutaires, augmentation de capital",
       "Rédaction de contrats commerciaux et conventions",
       "Conseil en droit OHADA et structuration patrimoniale",
     ],
@@ -164,7 +170,7 @@ export const services = [
     id: 5,
     titre: "Audit & Contrôle de gestion",
     icone: "Search",
-    accroche: "Nous contrôlons vos comptes, analysons vos performances et vous aidons à prendre les bonnes décisions.",
+    accroche: "Nous contrôlons vos comptes, analysons vos performances et vous aidons à décider.",
     items: [
       "Revue comptable périodique et audit de cohérence",
       "Analyse financière (ratios, marges, besoin en fonds de roulement)",
@@ -177,7 +183,7 @@ export const services = [
     id: 6,
     titre: "Conseil en gestion",
     icone: "Lightbulb",
-    accroche: "Nous vous aidons à prendre les bonnes décisions financières avec des données fiables et une expertise terrain.",
+    accroche: "Nous vous aidons à prendre les bonnes décisions financières avec des données fiables.",
     items: [
       "Budget annuel et suivi des écarts",
       "Optimisation fiscale légale",
@@ -189,17 +195,17 @@ export const services = [
 ]
 
 // ============================================
-// STATISTIQUES (compteurs animés accueil)
+// STATISTIQUES
 // ============================================
 export const stats = [
-  { valeur: new Date().getFullYear() - cabinetInfo.anneeFondation, suffixe: "+", label: "Années d'expérience" },
+  { valeur: new Date().getFullYear() - 2019, suffixe: "+", label: "Années d'expérience" },
   { valeur: 6, suffixe: "", label: "Domaines d'expertise" },
   { valeur: 4, suffixe: "", label: "Modules de formation" },
-  { valeur: "[À CONFIRMER]", suffixe: "", label: "Clients accompagnés" },
+  { valeur: 100, suffixe: "+", label: "Clients accompagnés" },
 ]
 
 // ============================================
-// FORMATIONS (4 modules complets)
+// FORMATIONS
 // ============================================
 export const formations = [
   {
@@ -213,17 +219,17 @@ export const formations = [
     prochainesSessions: ["S1 : 15 Janvier 2026", "S3 : 15 Juillet 2026"],
     attestation: "Attestation BKSC avec mention (note /20)",
     paiement: "3 tranches mensuelles accessibles",
+    fraisInscription: "10 000 FCFA (non remboursables)",
+    minimumApprenants: 6,
+    publicVise: "Étudiants BTS/Licence/Master · Salariés débutants · Toute personne souhaitant apprendre",
     tarifs: [
       { segment: "Étudiant(e)s", prix: "110 000 FCFA" },
       { segment: "Salarié(e)s", prix: "150 000 FCFA" },
       { segment: "Chef(fe)s d'entreprise", prix: "200 000 FCFA" },
     ],
-    fraisInscription: "10 000 FCFA (non remboursables)",
-    minimumApprenants: 6,
-    publicVise: "Étudiants BTS/Licence/Master · Salariés débutants · Toute personne souhaitant apprendre",
     programme: [
       "Sem. 1–2 : Plan comptable OHADA, partie double, journaux obligatoires",
-      "Sem. 3–6 : Achats, ventes, banque, caisse — TP sur pièces réelles BKSC",
+      "Sem. 3–6 : Achats, ventes, banque, caisse — TP sur pièces réelles",
       "Sem. 7–8 : Grand livre, balance, lettrage, rapprochement bancaire",
       "Sem. 9–10 : États financiers annuels (bilan, compte de résultat)",
       "Sem. 11 : Travaux de fin d'exercice, initiation Sage Saari",
@@ -241,18 +247,18 @@ export const formations = [
     prochainesSessions: ["S2 : 15 Avril 2026", "S4 : 15 Octobre 2026"],
     attestation: "Attestation BKSC avec mention (note /20)",
     paiement: "3 tranches mensuelles accessibles",
+    fraisInscription: "10 000 FCFA (non remboursables)",
+    minimumApprenants: 6,
+    publicVise: "Comptables en poste · Gestionnaires · Chefs d'entreprise",
     tarifs: [
       { segment: "Étudiant(e)s", prix: "110 000 FCFA" },
       { segment: "Salarié(e)s", prix: "150 000 FCFA" },
       { segment: "Chef(fe)s d'entreprise", prix: "200 000 FCFA" },
     ],
-    fraisInscription: "10 000 FCFA (non remboursables)",
-    minimumApprenants: 6,
-    publicVise: "Comptables en poste · Gestionnaires · Chefs d'entreprise",
     programme: [
       "Sem. 1–2 : Système fiscal camerounais, régimes, portail DGI",
       "Sem. 3–4 : TVA 19,25% — télédéclaration mensuelle",
-      "Sem. 5–6 : IS mensuel, précomptes, retenues à la source, IGS",
+      "Sem. 5–6 : IS mensuel, précomptes, retenues à la source",
       "Sem. 7–8 : Patentes, PSL, droits d'enregistrement, TDL",
       "Sem. 9–10 : DSF complète — CF1, CF2, tableaux annexes",
       "Sem. 11–12 : Lecture fiscale + Examen final",
@@ -269,21 +275,21 @@ export const formations = [
     prochainesSessions: ["S3 : 15 Juillet 2026"],
     attestation: "Attestation BKSC avec mention (note /20)",
     paiement: "3 tranches mensuelles accessibles",
+    fraisInscription: "10 000 FCFA (non remboursables)",
+    minimumApprenants: 6,
+    publicVise: "Porteurs de projets · Entrepreneurs · Responsables RH",
     tarifs: [
       { segment: "Étudiant(e)s", prix: "110 000 FCFA" },
       { segment: "Salarié(e)s", prix: "150 000 FCFA" },
       { segment: "Chef(fe)s d'entreprise", prix: "200 000 FCFA" },
     ],
-    fraisInscription: "10 000 FCFA (non remboursables)",
-    minimumApprenants: 6,
-    publicVise: "Porteurs de projets · Entrepreneurs · Responsables RH",
     programme: [
       "Sem. 1–2 : Formes juridiques au Cameroun — critères de choix",
       "Sem. 3–4 : Création CFCE : dossier, statuts, NIU",
       "Sem. 5–6 : Premières obligations fiscales post-création",
       "Sem. 7–8 : CNPS : inscription, cotisations, DIPE mensuel",
-      "Sem. 9–10 : Bulletins de salaire — IRPP, CFC, TSA, cotisations",
-      "Sem. 11–12 : Rupture contrat, solde tout compte + Examen final",
+      "Sem. 9–10 : Bulletins de salaire — IRPP, CFC, TSA",
+      "Sem. 11–12 : Rupture contrat, solde tout compte + Examen",
     ],
   },
   {
@@ -297,14 +303,14 @@ export const formations = [
     prochainesSessions: ["S4 : 15 Octobre 2026"],
     attestation: "Attestation BKSC avec mention (note /20)",
     paiement: "3 tranches mensuelles accessibles",
+    fraisInscription: "10 000 FCFA (non remboursables)",
+    minimumApprenants: 6,
+    publicVise: "Responsables financiers · Comptables confirmés · Chefs d'entreprise PME",
     tarifs: [
       { segment: "Étudiant(e)s", prix: "110 000 FCFA" },
       { segment: "Salarié(e)s", prix: "150 000 FCFA" },
       { segment: "Chef(fe)s d'entreprise", prix: "200 000 FCFA" },
     ],
-    fraisInscription: "10 000 FCFA (non remboursables)",
-    minimumApprenants: 6,
-    publicVise: "Responsables financiers · Comptables confirmés · Chefs d'entreprise PME",
     programme: [
       "Sem. 1–2 : Tableau de bord PME, KPIs, contrôle de gestion",
       "Sem. 3–4 : Audit interne — contrôles cohérence et vraisemblance",
@@ -317,28 +323,16 @@ export const formations = [
 ]
 
 // ============================================
-// ÉQUIPE — en attente des noms et photos
+// ÉQUIPE
 // ============================================
 export const equipe = [
   { role: "Directeur Général", nom: "[NOM]", photo: null },
-  { role: "[FONCTION TM]", nom: "[NOM]", photo: null },
-  { role: "[FONCTION EA]", nom: "[NOM]", photo: null },
-  { role: "[FONCTION CST]", nom: "[NOM]", photo: null },
+  { role: "Collaborateur", nom: "[NOM]", photo: null },
+  { role: "Collaborateur", nom: "[NOM]", photo: null },
+  { role: "Consultant", nom: "[NOM]", photo: null },
 ]
 
 // ============================================
-// TÉMOIGNAGES — en attente de collecte (objectif 5 écrits + 2 vidéos)
+// TÉMOIGNAGES
 // ============================================
 export const temoignages = []
-
-// ============================================
-// RÉSEAUX SOCIAUX — liens à confirmer
-// ============================================
-export const reseauxSociaux = {
-  facebook: "[LIEN PAGE FACEBOOK]",
-  whatsapp: "https://wa.me/237657378927",
-  linkedin: "[LIEN LINKEDIN]",
-  tiktok: "[LIEN TIKTOK]",
-  youtube: "[LIEN YOUTUBE]",
-  instagram: "[LIEN INSTAGRAM]",
-}

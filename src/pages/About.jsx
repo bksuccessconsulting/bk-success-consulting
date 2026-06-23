@@ -1,8 +1,18 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Target, Eye, User } from 'lucide-react'
-import { cabinetInfo, visionMission, historique, valeurs, equipe } from '../data/content'
+import { cabinetInfo, visionMission, historique, valeurs } from '../data/content'
+import { store } from '../data/contentStore'
 
 export default function About() {
+  const [equipe, setEquipe] = useState([])
+
+  useEffect(() => {
+    let actif = true
+    store.getEquipe().then((data) => { if (actif) setEquipe(data) })
+    return () => { actif = false }
+  }, [])
+
   const equipeDisponible = equipe.some((m) => !m.nom.startsWith('['))
 
   return (
@@ -42,17 +52,8 @@ export default function About() {
           </div>
           <div className="space-y-6">
             {historique.map((etape, i) => (
-              <motion.div
-                key={etape.periode}
-                initial={{ opacity: 0, x: -20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.08 }}
-                className="flex gap-5 items-start"
-              >
-                <div className="bg-[#0A69AD] text-white font-black text-sm px-4 py-2 rounded-lg shrink-0 min-w-[110px] text-center">
-                  {etape.periode}
-                </div>
+              <motion.div key={etape.periode} initial={{ opacity: 0, x: -20 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }} className="flex gap-5 items-start">
+                <div className="bg-[#0A69AD] text-white font-black text-sm px-4 py-2 rounded-lg shrink-0 min-w-[110px] text-center">{etape.periode}</div>
                 <p className="text-gray-600 text-sm leading-relaxed pt-1.5">{etape.texte}</p>
               </motion.div>
             ))}
@@ -103,9 +104,7 @@ export default function About() {
           ) : (
             <div className="bg-white border border-gray-200 rounded-2xl p-10 max-w-lg mx-auto text-center">
               <User className="text-[#C9A227] mx-auto mb-4" size={36} />
-              <p className="text-gray-500 text-sm">
-                Les portraits et présentations de notre équipe seront publiés très prochainement.
-              </p>
+              <p className="text-gray-500 text-sm">Les portraits et présentations de notre équipe seront publiés très prochainement.</p>
             </div>
           )}
         </div>
