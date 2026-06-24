@@ -19,7 +19,7 @@ export default function Services() {
     <div>
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-20 text-center">
         <div className="max-w-3xl mx-auto px-4">
-          <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Ce que nous faisons</span>
+          <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Ce que nous offrons</span>
           <h1 className="text-3xl md:text-5xl font-black text-white mt-2 mb-4">Nos Services</h1>
           <p className="text-gray-200">Un accompagnement complet : comptabilité, fiscalité, social, juridique, audit et conseil.</p>
         </div>
