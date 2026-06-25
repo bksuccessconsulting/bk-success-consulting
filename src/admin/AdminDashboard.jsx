@@ -3,14 +3,14 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   LayoutDashboard, Briefcase, GraduationCap, Users, Quote, Image,
   Megaphone, Inbox, LogOut, Plus, Pencil, Trash2, Menu, X, User,
-  Settings, Camera, CheckCircle2, TrendingUp, Star,
+  Settings, Camera, CheckCircle2, TrendingUp, Star, FileText,
 } from 'lucide-react'
 import { store } from '../data/contentStore'
 import { clearAdminSession } from './AdminGuard'
 import { cabinetInfo } from '../data/content'
 
 // ============================================
-// UPLOAD CLOUDINARY
+// HELPER CLOUDINARY
 // ============================================
 async function uploadCloudinary(fichier, type = 'image', onProgress) {
   return new Promise((resolve, reject) => {
@@ -38,8 +38,9 @@ async function uploadCloudinary(fichier, type = 'image', onProgress) {
 // MENU
 // ============================================
 const menu = [
-  { id: 'accueil', label: "Tableau de bord", icon: LayoutDashboard },
+  { id: 'accueil', label: 'Tableau de bord', icon: LayoutDashboard },
   { id: 'annonces', label: 'Annonces & Statuts', icon: Megaphone },
+  { id: 'blog', label: 'Blog & Actualités', icon: FileText },
   { id: 'services', label: 'Services', icon: Briefcase },
   { id: 'formations', label: 'Formations', icon: GraduationCap },
   { id: 'equipe', label: 'Équipe & Photos', icon: Users },
@@ -84,10 +85,8 @@ function SectionListe({ titre, description, champs, getter, setter }) {
     let nouveaux
     if (edition === 'nouveau') nouveaux = [...items, versItem(brouillon, { id: Date.now() })]
     else nouveaux = items.map((it, i) => (i === edition ? versItem(brouillon, it) : it))
-    setItems(nouveaux)
-    await setter(nouveaux)
-    setSauvegarde(true)
-    setTimeout(() => setSauvegarde(false), 2000)
+    setItems(nouveaux); await setter(nouveaux)
+    setSauvegarde(true); setTimeout(() => setSauvegarde(false), 2000)
     setEdition(null); setBrouillon(vide)
   }
   const supprimer = async (i) => {
@@ -96,16 +95,11 @@ function SectionListe({ titre, description, champs, getter, setter }) {
     setItems(nouveaux); await setter(nouveaux)
   }
 
-  if (chargement) return (
-    <div className="p-8 flex items-center gap-3 text-gray-400">
-      <div className="w-4 h-4 border-2 border-[#0A69AD] border-t-transparent rounded-full animate-spin" />
-      Chargement…
-    </div>
-  )
+  if (chargement) return <div className="p-8 flex items-center gap-3 text-gray-400 text-sm"><div className="w-4 h-4 border-2 border-[#0A69AD] border-t-transparent rounded-full animate-spin" /> Chargement…</div>
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-2">
         <div>
           <h2 className="text-lg font-black text-[#065280]">{titre}</h2>
           {description && <p className="text-xs text-gray-500 mt-0.5">{description}</p>}
@@ -117,8 +111,8 @@ function SectionListe({ titre, description, champs, getter, setter }) {
       </div>
 
       {sauvegarde && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-lg mt-3 mb-1">
-          <CheckCircle2 size={14} /> Enregistré avec succès dans Supabase
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-xl mt-3">
+          <CheckCircle2 size={14} /> Enregistré dans Supabase ✓
         </div>
       )}
 
@@ -141,23 +135,23 @@ function SectionListe({ titre, description, champs, getter, setter }) {
           ))}
           <div className="flex gap-2 pt-1">
             <button onClick={sauvegarder} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm hover:bg-[#b8932a] transition-colors">Enregistrer</button>
-            <button onClick={() => { setEdition(null); setBrouillon(vide) }} className="text-gray-500 px-4 py-2.5 text-sm hover:text-gray-700">Annuler</button>
+            <button onClick={() => { setEdition(null); setBrouillon(vide) }} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
           </div>
         </div>
       )}
 
       <div className="space-y-2 mt-4">
         {items.map((item, i) => (
-          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center gap-3 hover:border-gray-200 transition-colors">
+          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center gap-3 hover:border-gray-200">
             <div className="flex-1 min-w-0">
               <p className="font-bold text-[#065280] text-sm truncate">{item[champs[0].cle]}</p>
               {champs[1] && <p className="text-gray-400 text-xs truncate mt-0.5">{String(item[champs[1].cle] || '').slice(0, 80)}</p>}
             </div>
             <div className="flex gap-1.5 shrink-0">
               <button onClick={() => { setBrouillon(versBrouillon(item)); setEdition(i) }}
-                className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg transition-colors"><Pencil size={14} /></button>
+                className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={14} /></button>
               <button onClick={() => supprimer(i)}
-                className="text-red-400 p-2 hover:bg-red-50 rounded-lg transition-colors"><Trash2 size={14} /></button>
+                className="text-red-400 p-2 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
             </div>
           </div>
         ))}
@@ -189,22 +183,15 @@ function SectionFormations() {
 
   const versBrouillon = (f) => ({
     titre: f.titre || '', accroche: f.accroche || '', places: f.places || '',
-    prochainesSessions: (f.prochainesSessions || []).join('\n'),
-    publicVise: f.publicVise || '',
-    tarifEtudiant: f.tarifs?.[0]?.prix || '',
-    tarifSalarie: f.tarifs?.[1]?.prix || '',
-    tarifChef: f.tarifs?.[2]?.prix || '',
+    prochainesSessions: (f.prochainesSessions || []).join('\n'), publicVise: f.publicVise || '',
+    tarifEtudiant: f.tarifs?.[0]?.prix || '', tarifSalarie: f.tarifs?.[1]?.prix || '', tarifChef: f.tarifs?.[2]?.prix || '',
   })
 
   const versFormation = (b, ancien = {}) => ({
-    duree: '3 mois (12 semaines) — 240 heures',
-    vagueMatin: '08h00 – 12h00', vagueApresMidi: '13h00 – 17h00',
-    attestation: 'Attestation BKSC avec mention (note /20)',
-    paiement: '3 tranches mensuelles accessibles',
-    fraisInscription: '10 000 FCFA (non remboursables)',
-    minimumApprenants: 6, programme: [],
-    ...ancien,
-    titre: b.titre, accroche: b.accroche, places: b.places,
+    duree: '3 mois (12 semaines) — 240 heures', vagueMatin: '08h00 – 12h00', vagueApresMidi: '13h00 – 17h00',
+    attestation: 'Attestation BKSC avec mention (note /20)', paiement: '3 tranches mensuelles accessibles',
+    fraisInscription: '10 000 FCFA (non remboursables)', minimumApprenants: 6, programme: [],
+    ...ancien, titre: b.titre, accroche: b.accroche, places: b.places,
     prochainesSessions: b.prochainesSessions.split('\n').map(s => s.trim()).filter(Boolean),
     publicVise: b.publicVise,
     tarifs: [
@@ -230,8 +217,7 @@ function SectionFormations() {
     <div key={cle}>
       <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
       {type === 'textarea' ? (
-        <textarea rows={2} value={brouillon[cle]}
-          onChange={(e) => setBrouillon({ ...brouillon, [cle]: e.target.value })}
+        <textarea rows={2} value={brouillon[cle]} onChange={(e) => setBrouillon({ ...brouillon, [cle]: e.target.value })}
           className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
       ) : (
         <input value={brouillon[cle]} onChange={(e) => setBrouillon({ ...brouillon, [cle]: e.target.value })}
@@ -247,10 +233,10 @@ function SectionFormations() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-black text-[#065280]">Formations</h2>
-          <p className="text-xs text-gray-500">Gérez vos 4 modules de formation certifiants</p>
+          <p className="text-xs text-gray-500">Gérez vos 4 modules certifiants</p>
         </div>
         <button onClick={() => { setBrouillon(vide); setEdition('nouveau') }}
-          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
           <Plus size={16} /> Ajouter
         </button>
       </div>
@@ -267,7 +253,7 @@ function SectionFormations() {
             {champ('tarifSalarie', 'Tarif Salariés')}
             {champ('tarifChef', "Tarif Chefs d'ent.")}
           </div>
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2">
             <button onClick={sauvegarder} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm">Enregistrer</button>
             <button onClick={() => setEdition(null)} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
           </div>
@@ -276,21 +262,14 @@ function SectionFormations() {
 
       <div className="space-y-2">
         {items.map((item, i) => (
-          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 hover:border-gray-200">
+          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="font-bold text-[#065280] text-sm truncate">{item.titre}</p>
               <p className="text-gray-400 text-xs truncate mt-0.5">{item.accroche}</p>
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {(item.prochainesSessions || []).map(s => (
-                  <span key={s} className="bg-[#F4F6F8] text-[#065280] text-xs px-2 py-0.5 rounded-full">{s}</span>
-                ))}
-              </div>
             </div>
             <div className="flex gap-1.5 shrink-0">
-              <button onClick={() => { setBrouillon(versBrouillon(item)); setEdition(i) }}
-                className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={14} /></button>
-              <button onClick={() => supprimer(i)}
-                className="text-red-400 p-2 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
+              <button onClick={() => { setBrouillon(versBrouillon(item)); setEdition(i) }} className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={14} /></button>
+              <button onClick={() => supprimer(i)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
             </div>
           </div>
         ))}
@@ -317,13 +296,10 @@ function SectionEquipe() {
   }, [])
 
   const handlePhotoUpload = async (e) => {
-    const fichier = e.target.files[0]
-    if (!fichier) return
+    const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true)
-    try {
-      const url = await uploadCloudinary(fichier, 'image')
-      setBrouillon(b => ({ ...b, photo: url }))
-    } catch (err) { alert('Erreur upload: ' + err.message) }
+    try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, photo: url })) }
+    catch (err) { alert('Erreur upload: ' + err.message) }
     setUploading(false)
   }
 
@@ -350,7 +326,7 @@ function SectionEquipe() {
           <p className="text-xs text-gray-500">Uploadez les photos directement depuis votre appareil</p>
         </div>
         <button onClick={() => { setBrouillon(vide); setEdition('nouveau') }}
-          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
           <Plus size={16} /> Ajouter
         </button>
       </div>
@@ -360,14 +336,12 @@ function SectionEquipe() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-1">Nom complet *</label>
-              <input value={brouillon.nom} onChange={(e) => setBrouillon({ ...brouillon, nom: e.target.value })}
-                placeholder="Ex: Boukeu Florian"
+              <input value={brouillon.nom} onChange={(e) => setBrouillon({ ...brouillon, nom: e.target.value })} placeholder="Ex: Boukeu Florian"
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-1">Fonction *</label>
-              <input value={brouillon.role} onChange={(e) => setBrouillon({ ...brouillon, role: e.target.value })}
-                placeholder="Ex: Directeur Général"
+              <input value={brouillon.role} onChange={(e) => setBrouillon({ ...brouillon, role: e.target.value })} placeholder="Ex: Directeur Général"
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
           </div>
@@ -377,37 +351,31 @@ function SectionEquipe() {
               <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-green-200">
                 <img src={brouillon.photo} alt="" className="w-14 h-14 rounded-full object-cover border-2 border-[#0A69AD]" />
                 <div>
-                  <p className="text-xs font-bold text-green-600 flex items-center gap-1"><CheckCircle2 size={12} /> Photo chargée</p>
+                  <p className="text-xs font-bold text-green-600">✅ Photo chargée</p>
                   <button onClick={() => setBrouillon(b => ({ ...b, photo: '' }))} className="text-xs text-red-500 hover:underline mt-0.5">Changer</button>
                 </div>
               </div>
             ) : (
-              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${uploading ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD] bg-white'}`}>
+              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer ${uploading ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD] bg-white'}`}>
                 <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploading} className="hidden" />
                 {uploading ? (
                   <div className="flex items-center gap-2 text-[#0A69AD]">
                     <div className="w-4 h-4 border-2 border-[#0A69AD] border-t-transparent rounded-full animate-spin" />
-                    <span className="text-sm font-semibold">Upload en cours…</span>
+                    <span className="text-sm font-semibold">Upload…</span>
                   </div>
                 ) : (
-                  <div className="text-center">
-                    <Camera className="text-gray-400 mx-auto mb-1" size={24} />
-                    <p className="text-sm font-semibold text-[#065280]">Choisir depuis l'appareil</p>
-                    <p className="text-xs text-gray-400">JPG, PNG, WEBP</p>
-                  </div>
+                  <div className="text-center"><Camera className="text-gray-400 mx-auto mb-1" size={22} /><p className="text-sm font-semibold text-[#065280]">Depuis l'appareil</p><p className="text-xs text-gray-400">JPG, PNG, WEBP</p></div>
                 )}
               </label>
             )}
             <div className="mt-2">
               <label className="text-xs text-gray-400 block mb-1">Ou coller un lien :</label>
-              <input value={brouillon.photo} onChange={(e) => setBrouillon({ ...brouillon, photo: e.target.value })}
-                placeholder="https://..."
+              <input value={brouillon.photo} onChange={(e) => setBrouillon({ ...brouillon, photo: e.target.value })} placeholder="https://..."
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={sauvegarder} disabled={!brouillon.nom || uploading}
-              className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm disabled:opacity-50 hover:bg-[#b8932a] transition-colors">Enregistrer</button>
+            <button onClick={sauvegarder} disabled={!brouillon.nom || uploading} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm disabled:opacity-50">Enregistrer</button>
             <button onClick={() => setEdition(null)} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
           </div>
         </div>
@@ -415,7 +383,7 @@ function SectionEquipe() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
         {items.map((item, i) => (
-          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4 hover:border-gray-200">
+          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-gradient-to-br from-[#0A69AD] to-[#065280] flex items-center justify-center overflow-hidden shrink-0 shadow-md">
               {item.photo ? <img src={item.photo} alt={item.nom} className="w-full h-full object-cover" /> : <User className="text-white" size={20} />}
             </div>
@@ -424,8 +392,7 @@ function SectionEquipe() {
               <p className="text-[#0A69AD] text-xs font-semibold mt-0.5">{item.role}</p>
             </div>
             <div className="flex gap-1.5 shrink-0">
-              <button onClick={() => { setBrouillon({ nom: item.nom || '', role: item.role || '', photo: item.photo || '' }); setEdition(i) }}
-                className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={14} /></button>
+              <button onClick={() => { setBrouillon({ nom: item.nom || '', role: item.role || '', photo: item.photo || '' }); setEdition(i) }} className="text-[#0A69AD] p-2 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={14} /></button>
               <button onClick={() => supprimer(i)} className="text-red-400 p-2 hover:bg-red-50 rounded-lg"><Trash2 size={14} /></button>
             </div>
           </div>
@@ -433,7 +400,7 @@ function SectionEquipe() {
         {items.length === 0 && (
           <div className="col-span-2 bg-[#F4F6F8] rounded-2xl p-8 text-center">
             <User className="text-gray-300 mx-auto mb-2" size={32} />
-            <p className="text-gray-400 text-sm">Aucun membre. Ajoutez les membres de l'équipe ci-dessus.</p>
+            <p className="text-gray-400 text-sm">Aucun membre. Ajoutez les membres de l'équipe.</p>
           </div>
         )}
       </div>
@@ -442,15 +409,15 @@ function SectionEquipe() {
 }
 
 // ============================================
-// SECTION TÉMOIGNAGES (avec étoiles)
+// SECTION TÉMOIGNAGES
 // ============================================
 function SectionTemoignages() {
   const [items, setItems] = useState([])
   const [chargement, setChargement] = useState(true)
   const [edition, setEdition] = useState(null)
+  const [uploading, setUploading] = useState(false)
   const vide = { nom: '', entreprise: '', texte: '', note: '5', photo: '' }
   const [brouillon, setBrouillon] = useState(vide)
-  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     let actif = true
@@ -459,13 +426,10 @@ function SectionTemoignages() {
   }, [])
 
   const handlePhotoUpload = async (e) => {
-    const fichier = e.target.files[0]
-    if (!fichier) return
+    const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true)
-    try {
-      const url = await uploadCloudinary(fichier, 'image')
-      setBrouillon(b => ({ ...b, photo: url }))
-    } catch (err) { alert('Erreur: ' + err.message) }
+    try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, photo: url })) }
+    catch (err) { alert('Erreur: ' + err.message) }
     setUploading(false)
   }
 
@@ -490,10 +454,10 @@ function SectionTemoignages() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-black text-[#065280]">Témoignages</h2>
-          <p className="text-xs text-gray-500">Les avis de vos clients apparaissent en carousel sur l'accueil</p>
+          <p className="text-xs text-gray-500">Apparaissent en carousel sur la page d'accueil</p>
         </div>
         <button onClick={() => { setBrouillon(vide); setEdition('nouveau') }}
-          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
           <Plus size={16} /> Ajouter
         </button>
       </div>
@@ -507,7 +471,7 @@ function SectionTemoignages() {
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Entreprise / Organisation</label>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Entreprise</label>
               <input value={brouillon.entreprise} onChange={(e) => setBrouillon({ ...brouillon, entreprise: e.target.value })}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
@@ -522,14 +486,14 @@ function SectionTemoignages() {
               <label className="text-xs font-semibold text-gray-500 block mb-1">Note</label>
               <select value={brouillon.note} onChange={(e) => setBrouillon({ ...brouillon, note: e.target.value })}
                 className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
-                {[5, 4, 3, 2, 1].map(n => <option key={n} value={n}>{n} étoile{n > 1 ? 's' : ''}</option>)}
+                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} étoile{n > 1 ? 's' : ''}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Photo (optionnel)</label>
-              <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 cursor-pointer text-sm text-gray-600 hover:border-[#0A69AD] transition-colors">
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Photo</label>
+              <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 cursor-pointer text-sm text-gray-600 hover:border-[#0A69AD]">
                 <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploading} className="hidden" />
-                {uploading ? '⏳ Upload…' : brouillon.photo ? '✅ Photo chargée' : '📸 Choisir une photo'}
+                {uploading ? '⏳ Upload…' : brouillon.photo ? '✅ Chargée' : '📸 Photo client'}
               </label>
             </div>
           </div>
@@ -542,13 +506,13 @@ function SectionTemoignages() {
 
       <div className="space-y-2 mt-4">
         {items.map((item, i) => (
-          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4 hover:border-gray-200">
+          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-[#0A69AD] flex items-center justify-center overflow-hidden shrink-0">
                 {item.photo ? <img src={item.photo} alt={item.nom} className="w-full h-full object-cover" /> : <User className="text-white" size={16} />}
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 mb-0.5">
                   <p className="font-bold text-[#065280] text-sm">{item.nom}</p>
                   {item.entreprise && <span className="text-xs text-gray-400">· {item.entreprise}</span>}
                   <div className="flex gap-0.5 ml-auto">
@@ -584,9 +548,9 @@ function SectionGalerie() {
   const [chargement, setChargement] = useState(true)
   const [uploading, setUploading] = useState(false)
   const [progression, setProgression] = useState(0)
-  const [brouillon, setBrouillon] = useState({ caption: '', categorie: 'cabinet' })
   const [urlTemp, setUrlTemp] = useState('')
   const [showForm, setShowForm] = useState(false)
+  const [brouillon, setBrouillon] = useState({ caption: '', categorie: 'cabinet' })
 
   useEffect(() => {
     let actif = true
@@ -595,27 +559,23 @@ function SectionGalerie() {
   }, [])
 
   const handleUpload = async (e) => {
-    const fichier = e.target.files[0]
-    if (!fichier) return
+    const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true); setProgression(0); setShowForm(true)
-    try {
-      const url = await uploadCloudinary(fichier, 'image', setProgression)
-      setUrlTemp(url)
-    } catch (err) { alert('Erreur: ' + err.message); setShowForm(false) }
+    try { const url = await uploadCloudinary(fichier, 'image', setProgression); setUrlTemp(url) }
+    catch (err) { alert('Erreur: ' + err.message); setShowForm(false) }
     setUploading(false)
   }
 
   const ajouter = async () => {
-    if (!urlTemp) { alert('Uploadez une image d\'abord.'); return }
+    if (!urlTemp) return
     const nouveau = { id: Date.now(), url: urlTemp, caption: brouillon.caption, categorie: brouillon.categorie }
     const nouveaux = [...items, nouveau]
-    setItems(nouveaux)
-    await store.setGalerie(nouveaux)
+    setItems(nouveaux); await store.setGalerie(nouveaux)
     setUrlTemp(''); setBrouillon({ caption: '', categorie: 'cabinet' }); setShowForm(false)
   }
 
   const supprimer = async (i) => {
-    if (!confirm('Retirer cette photo de la galerie ?')) return
+    if (!confirm('Retirer cette photo ?')) return
     const nouveaux = items.filter((_, idx) => idx !== i)
     setItems(nouveaux); await store.setGalerie(nouveaux)
   }
@@ -624,36 +584,33 @@ function SectionGalerie() {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-black text-[#065280]">Galerie Photos</h2>
-          <p className="text-xs text-gray-500">Ces photos apparaissent sur la page d'accueil du site</p>
+          <p className="text-xs text-gray-500">Ces photos s'affichent sur la page d'accueil</p>
         </div>
-        <label className={`bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors cursor-pointer ${uploading ? 'opacity-60' : ''}`}>
+        <label className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors">
           <input type="file" accept="image/*" onChange={handleUpload} disabled={uploading} className="hidden" />
-          <Plus size={16} /> Ajouter une photo
+          <Plus size={16} /> Ajouter
         </label>
       </div>
 
       {uploading && (
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mt-3">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-4 h-4 border-2 border-[#0A69AD] border-t-transparent rounded-full animate-spin" />
-            <span className="text-sm text-[#0A69AD] font-semibold">Upload en cours… {progression}%</span>
-          </div>
-          <div className="w-full bg-blue-200 rounded-full h-2">
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <div className="w-full bg-blue-200 rounded-full h-2 mb-1">
             <div className="bg-[#0A69AD] h-2 rounded-full transition-all" style={{ width: `${progression}%` }} />
           </div>
+          <p className="text-xs text-[#0A69AD] font-semibold">Upload… {progression}%</p>
         </div>
       )}
 
       {showForm && urlTemp && (
-        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-4 mt-3 space-y-3">
-          <div className="flex gap-3 items-start">
-            <img src={urlTemp} alt="" className="w-20 h-20 rounded-xl object-cover border border-gray-200 shrink-0" />
+        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-4 mb-4 space-y-3">
+          <div className="flex gap-4">
+            <img src={urlTemp} alt="" className="w-20 h-20 rounded-xl object-cover shrink-0" />
             <div className="flex-1 space-y-2">
               <div>
-                <label className="text-xs font-semibold text-gray-500 block mb-1">Légende (optionnel)</label>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Légende</label>
                 <input value={brouillon.caption} onChange={(e) => setBrouillon(b => ({ ...b, caption: e.target.value }))}
                   placeholder="Ex: Salle de formation BKSC"
                   className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
@@ -677,23 +634,20 @@ function SectionGalerie() {
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 mt-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {items.map((item, i) => (
-          <div key={item.id || i} className="relative group rounded-xl overflow-hidden bg-gray-100 aspect-square">
+          <div key={item.id || i} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
             <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-[#065280]/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
               {item.caption && <p className="text-white text-xs font-semibold px-2 text-center">{item.caption}</p>}
-              {item.categorie && <span className="bg-[#C9A227] text-[#065280] text-xs px-2 py-0.5 rounded-full font-bold">{item.categorie}</span>}
-              <button onClick={() => supprimer(i)} className="mt-1 bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-red-600 transition-colors">
-                Supprimer
-              </button>
+              <button onClick={() => supprimer(i)} className="bg-red-500 text-white text-xs px-3 py-1.5 rounded-lg font-semibold">Supprimer</button>
             </div>
           </div>
         ))}
         {items.length === 0 && (
           <div className="col-span-4 bg-[#F4F6F8] rounded-2xl p-10 text-center">
             <Camera className="text-gray-300 mx-auto mb-3" size={36} />
-            <p className="text-gray-400 text-sm">Aucune photo. Ajoutez des photos de votre cabinet.</p>
+            <p className="text-gray-400 text-sm">Aucune photo. Ajoutez des photos du cabinet.</p>
           </div>
         )}
       </div>
@@ -718,24 +672,20 @@ function SectionMedias() {
   }, [])
 
   const handleFichier = async (e) => {
-    const fichier = e.target.files[0]
-    if (!fichier) return
+    const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true); setProgression(0)
     try {
       const url = await uploadCloudinary(fichier, 'video', setProgression)
       const nouveauMedia = { ...media, heroVideoUrl: url }
-      setMedia(nouveauMedia)
-      await store.setMedia(nouveauMedia)
-      setEnregistre(true)
-      setTimeout(() => setEnregistre(false), 3000)
+      setMedia(nouveauMedia); await store.setMedia(nouveauMedia)
+      setEnregistre(true); setTimeout(() => setEnregistre(false), 3000)
     } catch (err) { alert('Erreur: ' + err.message) }
     setUploading(false); setProgression(0)
   }
 
   const sauvegarderLien = async () => {
     await store.setMedia(media)
-    setEnregistre(true)
-    setTimeout(() => setEnregistre(false), 2000)
+    setEnregistre(true); setTimeout(() => setEnregistre(false), 2000)
   }
 
   if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
@@ -743,30 +693,22 @@ function SectionMedias() {
   return (
     <div className="p-4 md:p-6">
       <h2 className="text-lg font-black text-[#065280] mb-1">Vidéo Hero</h2>
-      <p className="text-xs text-gray-500 mb-5">Vidéo en fond sur la page d'accueil. Si non définie, la vidéo par défaut est utilisée.</p>
-
+      <p className="text-xs text-gray-500 mb-5">Vidéo en fond sur l'accueil. Si vide, la vidéo locale par défaut est utilisée.</p>
       <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 space-y-5 max-w-xl">
         <div>
-          <p className="text-xs font-bold text-gray-500 uppercase mb-3">📁 Uploader depuis l'appareil</p>
+          <p className="text-xs font-bold text-gray-500 uppercase mb-2">📁 Uploader depuis l'appareil</p>
           <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-2xl cursor-pointer transition-colors ${uploading ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD] bg-white'}`}>
             <input type="file" accept="video/*" onChange={handleFichier} disabled={uploading} className="hidden" />
             {uploading ? (
               <div className="text-center px-6 w-full">
-                <div className="w-full bg-blue-200 rounded-full h-3 mb-2">
-                  <div className="bg-[#0A69AD] h-3 rounded-full transition-all" style={{ width: `${progression}%` }} />
-                </div>
+                <div className="w-full bg-blue-200 rounded-full h-3 mb-2"><div className="bg-[#0A69AD] h-3 rounded-full transition-all" style={{ width: `${progression}%` }} /></div>
                 <p className="text-[#0A69AD] font-semibold text-sm">Upload… {progression}%</p>
               </div>
             ) : (
-              <div className="text-center">
-                <p className="text-3xl mb-1">🎬</p>
-                <p className="text-sm font-bold text-[#065280]">Choisir une vidéo</p>
-                <p className="text-xs text-gray-400">MP4, MOV — max 100MB</p>
-              </div>
+              <div className="text-center"><p className="text-3xl mb-1">🎬</p><p className="text-sm font-bold text-[#065280]">Choisir une vidéo</p><p className="text-xs text-gray-400">MP4, MOV — max 100MB</p></div>
             )}
           </label>
         </div>
-
         {media.heroVideoUrl && media.heroVideoUrl.startsWith('http') && (
           <div>
             <p className="text-xs font-bold text-gray-500 uppercase mb-2">✅ Vidéo uploadée</p>
@@ -775,32 +717,30 @@ function SectionMedias() {
               className="mt-2 text-red-400 text-xs font-semibold hover:underline">🗑 Revenir à la vidéo par défaut</button>
           </div>
         )}
-
         <div>
           <p className="text-xs font-bold text-gray-500 uppercase mb-2">🔗 Ou coller un lien .mp4</p>
           <div className="flex gap-2">
-            <input value={media.heroVideoUrl || ''} onChange={(e) => setMedia({ ...media, heroVideoUrl: e.target.value })}
-              placeholder="https://..."
+            <input value={media.heroVideoUrl || ''} onChange={(e) => setMedia({ ...media, heroVideoUrl: e.target.value })} placeholder="https://..."
               className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white min-w-0" />
-            <button onClick={sauvegarderLien} className="bg-[#C9A227] text-[#065280] font-black px-4 py-2 rounded-xl text-sm shrink-0 hover:bg-[#b8932a] transition-colors">
+            <button onClick={sauvegarderLien} className="bg-[#C9A227] text-[#065280] font-black px-4 py-2 rounded-xl text-sm shrink-0">
               {enregistre ? '✓ OK' : 'Sauver'}
             </button>
           </div>
         </div>
-        {enregistre && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-xl px-3 py-2 flex items-center gap-2"><CheckCircle2 size={14} /> Enregistré dans Supabase !</div>}
+        {enregistre && <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-xl px-3 py-2 flex items-center gap-2"><CheckCircle2 size={13} /> Enregistré dans Supabase !</div>}
       </div>
     </div>
   )
 }
 
 // ============================================
-// SECTION PARAMÈTRES DU SITE
+// SECTION PARAMÈTRES
 // ============================================
 function SectionParametres() {
   const [settings, setSettings] = useState({})
   const [chargement, setChargement] = useState(true)
-  const [enregistre, setEnregistre] = useState(false)
   const [sauvegarde, setSauvegarde] = useState(false)
+  const [enregistre, setEnregistre] = useState(false)
 
   useEffect(() => {
     let actif = true
@@ -810,19 +750,15 @@ function SectionParametres() {
 
   const sauvegarder = async () => {
     setSauvegarde(true)
-    const ok = await store.setSettings(settings)
-    setSauvegarde(false)
-    setEnregistre(true)
-    setTimeout(() => setEnregistre(false), 3000)
+    await store.setSettings(settings)
+    setSauvegarde(false); setEnregistre(true); setTimeout(() => setEnregistre(false), 3000)
   }
 
   const champ = (cle, label, placeholder = '') => (
     <div key={cle}>
       <label className="text-xs font-semibold text-gray-500 block mb-1">{label}</label>
-      <input value={settings[cle] || ''}
-        onChange={(e) => setSettings(s => ({ ...s, [cle]: e.target.value }))}
-        placeholder={placeholder}
-        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0A69AD] bg-white transition-colors" />
+      <input value={settings[cle] || ''} onChange={(e) => setSettings(s => ({ ...s, [cle]: e.target.value }))} placeholder={placeholder}
+        className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0A69AD] bg-white" />
     </div>
   )
 
@@ -830,61 +766,36 @@ function SectionParametres() {
 
   return (
     <div className="p-4 md:p-6">
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-black text-[#065280]">Paramètres du site</h2>
-          <p className="text-xs text-gray-500">Modifiez les informations de contact et réseaux sociaux</p>
+          <p className="text-xs text-gray-500">Contacts et réseaux sociaux</p>
         </div>
         <button onClick={sauvegarder} disabled={sauvegarde}
-          className="bg-[#C9A227] hover:bg-[#b8932a] disabled:opacity-60 text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-colors shadow-sm">
-          {sauvegarde ? (
-            <><div className="w-3.5 h-3.5 border-2 border-[#065280] border-t-transparent rounded-full animate-spin" /> Sauvegarde…</>
-          ) : (
-            <><CheckCircle2 size={15} /> Enregistrer</>
-          )}
+          className="bg-[#C9A227] hover:bg-[#b8932a] disabled:opacity-60 text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm flex items-center gap-2 transition-colors">
+          {sauvegarde ? <><div className="w-3.5 h-3.5 border-2 border-[#065280] border-t-transparent rounded-full animate-spin" /> Sauvegarde…</> : <><CheckCircle2 size={15} /> Enregistrer</>}
         </button>
       </div>
-
-      {enregistre && (
-        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-xl mt-3">
-          <CheckCircle2 size={14} /> Paramètres enregistrés dans Supabase avec succès !
-        </div>
-      )}
-
-      <div className="mt-5 space-y-6">
-        {/* Contact */}
+      {enregistre && <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-xl mb-4"><CheckCircle2 size={14} /> Paramètres enregistrés dans Supabase !</div>}
+      <div className="space-y-5">
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
-          <h3 className="font-black text-[#065280] text-sm mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#0A69AD] rounded-lg flex items-center justify-center">
-              <Settings className="text-white" size={12} />
-            </div>
-            Coordonnées
-          </h3>
+          <h3 className="font-black text-[#065280] text-sm mb-4 flex items-center gap-2"><div className="w-6 h-6 bg-[#0A69AD] rounded-lg flex items-center justify-center"><Settings className="text-white" size={12} /></div> Coordonnées</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {champ('telephonePrincipal', 'Téléphone principal', '+237 6XX XX XX XX')}
             {champ('telephoneSecondaire', 'Téléphone secondaire', '+237 6XX XX XX XX')}
             {champ('whatsapp', 'WhatsApp (sans +)', '237657378927')}
-            {champ('email', 'Email', 'contact@bksuccessconsulting.com')}
-            <div className="md:col-span-2">
-              {champ('adresse', 'Adresse complète', 'Ndogbong Citadelle, Douala...')}
-            </div>
+            {champ('email', 'Email', 'bksuccessconsulting@gmail.com')}
+            <div className="md:col-span-2">{champ('adresse', 'Adresse', 'Ndogbong Citadelle, Douala...')}</div>
           </div>
         </div>
-
-        {/* Réseaux sociaux */}
         <div className="bg-white border border-gray-100 rounded-2xl p-5">
-          <h3 className="font-black text-[#065280] text-sm mb-4 flex items-center gap-2">
-            <div className="w-6 h-6 bg-[#C9A227] rounded-lg flex items-center justify-center">
-              <TrendingUp className="text-[#065280]" size={12} />
-            </div>
-            Réseaux sociaux
-          </h3>
+          <h3 className="font-black text-[#065280] text-sm mb-4 flex items-center gap-2"><div className="w-6 h-6 bg-[#C9A227] rounded-lg flex items-center justify-center"><TrendingUp className="text-[#065280]" size={12} /></div> Réseaux sociaux</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {champ('facebook', 'Facebook (lien complet)', 'https://facebook.com/...')}
-            {champ('linkedin', 'LinkedIn (lien complet)', 'https://linkedin.com/...')}
-            {champ('instagram', 'Instagram (lien complet)', 'https://instagram.com/...')}
-            {champ('youtube', 'YouTube (lien complet)', 'https://youtube.com/...')}
-            {champ('tiktok', 'TikTok (lien complet)', 'https://tiktok.com/...')}
+            {champ('facebook', 'Facebook', 'https://facebook.com/...')}
+            {champ('linkedin', 'LinkedIn', 'https://linkedin.com/...')}
+            {champ('instagram', 'Instagram', 'https://instagram.com/...')}
+            {champ('youtube', 'YouTube', 'https://youtube.com/...')}
+            {champ('tiktok', 'TikTok', 'https://tiktok.com/...')}
           </div>
         </div>
       </div>
@@ -903,50 +814,27 @@ function SectionAnnonces() {
   const vide = { titre: '', contenu: '', type: 'bandeau', image_url: '', date_fin: '', actif: true }
   const [brouillon, setBrouillon] = useState(vide)
 
-  const charger = async () => {
-    setChargement(true)
-    const data = await store.getAnnonces()
-    setAnnonces(data)
-    setChargement(false)
-  }
-
+  const charger = async () => { setChargement(true); setAnnonces(await store.getAnnonces()); setChargement(false) }
   useEffect(() => { charger() }, [])
 
   const handleImageUpload = async (e) => {
-    const fichier = e.target.files[0]
-    if (!fichier) return
+    const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true)
-    try {
-      const url = await uploadCloudinary(fichier, 'image')
-      setBrouillon(b => ({ ...b, image_url: url }))
-    } catch (err) { alert('Erreur: ' + err.message) }
+    try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, image_url: url })) }
+    catch (err) { alert('Erreur: ' + err.message) }
     setUploading(false)
   }
 
   const sauvegarder = async () => {
     if (!brouillon.titre) { alert('Le titre est obligatoire.'); return }
-    const annonce = {
-      titre: brouillon.titre,
-      contenu: brouillon.contenu || '',
-      type: brouillon.type,
-      image_url: brouillon.image_url || null,
-      actif: brouillon.actif,
-      date_fin: brouillon.date_fin ? new Date(brouillon.date_fin).toISOString() : null,
-    }
+    const annonce = { titre: brouillon.titre, contenu: brouillon.contenu || '', type: brouillon.type, image_url: brouillon.image_url || null, actif: brouillon.actif, date_fin: brouillon.date_fin ? new Date(brouillon.date_fin).toISOString() : null }
     const result = await store.addAnnonce(annonce)
     if (result) { setBrouillon(vide); setShowForm(false); charger() }
     else alert('Erreur Supabase. Vérifiez que la table "annonces" existe.')
   }
 
-  const toggleActif = async (annonce) => {
-    await store.updateAnnonce(annonce.id, { actif: !annonce.actif })
-    charger()
-  }
-  const supprimer = async (id) => {
-    if (!confirm('Supprimer définitivement ?')) return
-    await store.deleteAnnonce(id)
-    charger()
-  }
+  const toggleActif = async (annonce) => { await store.updateAnnonce(annonce.id, { actif: !annonce.actif }); charger() }
+  const supprimer = async (id) => { if (!confirm('Supprimer définitivement ?')) return; await store.deleteAnnonce(id); charger() }
 
   const typeBadges = {
     bandeau: { label: '📢 Bandeau', color: 'bg-blue-100 text-blue-700' },
@@ -962,41 +850,33 @@ function SectionAnnonces() {
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-lg font-black text-[#065280]">Annonces & Statuts</h2>
-          <p className="text-xs text-gray-500">Publiez des annonces visibles par tous les visiteurs</p>
+          <p className="text-xs text-gray-500">Visibles par tous les visiteurs du site</p>
         </div>
         <button onClick={() => { setBrouillon(vide); setShowForm(true) }}
-          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
           <Plus size={16} /> Nouvelle
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-5">
-        {[
-          { type: 'bandeau', icon: '📢', desc: 'Texte en haut du site' },
-          { type: 'popup', icon: '🪟', desc: 'Fenêtre à l\'arrivée' },
-          { type: 'statut', icon: '💬', desc: 'Carte sur l\'accueil' },
-          { type: 'alerte', icon: '🔔', desc: 'Alerte urgente rouge' },
-        ].map((t) => (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-4">
+        {[{ type: 'bandeau', icon: '📢', desc: 'Texte en haut' }, { type: 'popup', icon: '🪟', desc: "Fenêtre d'arrivée" }, { type: 'statut', icon: '💬', desc: 'Carte accueil' }, { type: 'alerte', icon: '🔔', desc: 'Alerte rouge' }].map(t => (
           <div key={t.type} className="bg-white border border-gray-100 rounded-xl p-3 text-center">
-            <p className="text-xl">{t.icon}</p>
-            <p className="text-xs font-bold text-[#065280] capitalize mt-1">{t.type}</p>
-            <p className="text-xs text-gray-400 leading-tight">{t.desc}</p>
+            <p className="text-xl">{t.icon}</p><p className="text-xs font-bold text-[#065280] capitalize mt-1">{t.type}</p><p className="text-xs text-gray-400">{t.desc}</p>
           </div>
         ))}
       </div>
 
       {showForm && (
-        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 mb-5 space-y-3">
+        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 mb-4 space-y-3">
           <h3 className="font-bold text-[#065280] text-sm">Nouvelle annonce</h3>
           <div>
             <label className="text-xs font-semibold text-gray-500 block mb-1">Titre *</label>
-            <input value={brouillon.titre} onChange={(e) => setBrouillon({ ...brouillon, titre: e.target.value })}
-              placeholder="Ex: Inscriptions ouvertes — Formation Fiscalité 2026"
+            <input value={brouillon.titre} onChange={(e) => setBrouillon({ ...brouillon, titre: e.target.value })} placeholder="Ex: Inscriptions ouvertes — Formation Fiscalité 2026"
               className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
           </div>
           <div>
             <label className="text-xs font-semibold text-gray-500 block mb-1">Message</label>
-            <textarea rows={3} value={brouillon.contenu} onChange={(e) => setBrouillon({ ...brouillon, contenu: e.target.value })}
+            <textarea rows={2} value={brouillon.contenu} onChange={(e) => setBrouillon({ ...brouillon, contenu: e.target.value })}
               className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -1012,8 +892,7 @@ function SectionAnnonces() {
             </div>
             <div>
               <label className="text-xs font-semibold text-gray-500 block mb-1">Expire le</label>
-              <input type="datetime-local" value={brouillon.date_fin}
-                onChange={(e) => setBrouillon({ ...brouillon, date_fin: e.target.value })}
+              <input type="datetime-local" value={brouillon.date_fin} onChange={(e) => setBrouillon({ ...brouillon, date_fin: e.target.value })}
                 className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
           </div>
@@ -1022,19 +901,17 @@ function SectionAnnonces() {
             {brouillon.image_url ? (
               <div className="relative mb-2">
                 <img src={brouillon.image_url} alt="" className="w-full h-28 object-cover rounded-xl" />
-                <button onClick={() => setBrouillon(b => ({ ...b, image_url: '' }))}
-                  className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button>
+                <button onClick={() => setBrouillon(b => ({ ...b, image_url: '' }))} className="absolute top-1 right-1 bg-black/60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button>
               </div>
             ) : (
-              <label className="flex items-center justify-center gap-2 h-14 border-2 border-dashed border-gray-300 hover:border-[#0A69AD] rounded-xl cursor-pointer bg-white transition-colors">
+              <label className="flex items-center justify-center gap-2 h-14 border-2 border-dashed border-gray-300 hover:border-[#0A69AD] rounded-xl cursor-pointer bg-white">
                 <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
                 <span className="text-sm text-gray-500">{uploading ? '⏳ Upload…' : '🖼️ Ajouter une image'}</span>
               </label>
             )}
           </div>
           <div className="flex items-center gap-2">
-            <input type="checkbox" id="actif_f" checked={brouillon.actif}
-              onChange={(e) => setBrouillon({ ...brouillon, actif: e.target.checked })} className="w-4 h-4 rounded accent-[#0A69AD]" />
+            <input type="checkbox" id="actif_f" checked={brouillon.actif} onChange={(e) => setBrouillon({ ...brouillon, actif: e.target.checked })} className="w-4 h-4 rounded accent-[#0A69AD]" />
             <label htmlFor="actif_f" className="text-sm text-gray-600 cursor-pointer">Publier immédiatement</label>
           </div>
           <div className="flex gap-2">
@@ -1047,15 +924,14 @@ function SectionAnnonces() {
       <div className="space-y-3">
         {annonces.length === 0 && !showForm && (
           <div className="bg-[#F4F6F8] rounded-2xl p-10 text-center">
-            <p className="text-3xl mb-2">📢</p>
-            <p className="text-gray-400 text-sm">Aucune annonce. Créez votre première annonce.</p>
+            <p className="text-3xl mb-2">📢</p><p className="text-gray-400 text-sm">Aucune annonce. Créez votre première annonce.</p>
           </div>
         )}
         {annonces.map((annonce) => {
           const badge = typeBadges[annonce.type] || { label: annonce.type, color: 'bg-gray-100 text-gray-700' }
           const expire = annonce.date_fin ? new Date(annonce.date_fin) < new Date() : false
           return (
-            <div key={annonce.id} className={`bg-white border rounded-2xl p-4 transition-all ${!annonce.actif || expire ? 'opacity-60 border-gray-100' : 'border-[#0A69AD]/20'}`}>
+            <div key={annonce.id} className={`bg-white border rounded-2xl p-4 ${!annonce.actif || expire ? 'opacity-60 border-gray-100' : 'border-[#0A69AD]/20'}`}>
               <div className="flex items-start gap-3">
                 {annonce.image_url && <img src={annonce.image_url} alt="" className="w-12 h-12 rounded-xl object-cover shrink-0" />}
                 <div className="flex-1 min-w-0">
@@ -1067,14 +943,199 @@ function SectionAnnonces() {
                   </div>
                   <p className="font-bold text-[#065280] text-sm">{annonce.titre}</p>
                   {annonce.contenu && <p className="text-gray-500 text-xs mt-0.5 line-clamp-1">{annonce.contenu}</p>}
-                  {annonce.date_fin && <p className="text-xs text-gray-400 mt-1">Expire : {new Date(annonce.date_fin).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}</p>}
                 </div>
                 <div className="flex flex-col gap-1.5 shrink-0">
-                  <button onClick={() => toggleActif(annonce)}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-xl whitespace-nowrap transition-colors ${annonce.actif ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                  <button onClick={() => toggleActif(annonce)} className={`text-xs font-bold px-3 py-1.5 rounded-xl ${annonce.actif ? 'bg-gray-100 text-gray-600' : 'bg-green-100 text-green-700'}`}>
                     {annonce.actif ? 'Désactiver' : 'Activer'}
                   </button>
                   <button onClick={() => supprimer(annonce.id)} className="text-xs text-red-500 font-bold px-3 py-1.5 rounded-xl hover:bg-red-50">Supprimer</button>
+                </div>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ============================================
+// SECTION BLOG
+// ============================================
+function SectionBlog() {
+  const [articles, setArticles] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [edition, setEdition] = useState(null)
+  const [uploading, setUploading] = useState(false)
+
+  const CATEGORIES = [
+    { value: 'fiscalite', label: '📊 Fiscalité' },
+    { value: 'comptabilite', label: '📋 Comptabilité OHADA' },
+    { value: 'creation-entreprise', label: '🏢 Création d\'entreprise' },
+    { value: 'conseils', label: '💡 Conseils & Gestion' },
+    { value: 'actualites', label: '📰 Actualités' },
+  ]
+
+  const vide = { titre: '', extrait: '', contenu: '', image_url: '', categorie: 'actualites', publie: false }
+  const [brouillon, setBrouillon] = useState(vide)
+
+  const charger = async () => {
+    setChargement(true)
+    const data = await store.getBlogArticles()
+    setArticles(data); setChargement(false)
+  }
+  useEffect(() => { charger() }, [])
+
+  const handleImageUpload = async (e) => {
+    const fichier = e.target.files[0]; if (!fichier) return
+    setUploading(true)
+    try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, image_url: url })) }
+    catch (err) { alert('Erreur: ' + err.message) }
+    setUploading(false)
+  }
+
+  const sauvegarder = async () => {
+    if (!brouillon.titre) { alert('Le titre est obligatoire.'); return }
+    if (edition === 'nouveau') {
+      const result = await store.addBlogArticle(brouillon)
+      if (!result) { alert('Erreur Supabase. Vérifiez que la table blog_articles existe.'); return }
+    } else {
+      const ok = await store.updateBlogArticle(edition.id, brouillon)
+      if (!ok) { alert('Erreur lors de la mise à jour.'); return }
+    }
+    setEdition(null); setBrouillon(vide); charger()
+  }
+
+  const togglePublie = async (article) => {
+    await store.updateBlogArticle(article.id, { publie: !article.publie })
+    charger()
+  }
+
+  const supprimer = async (id) => {
+    if (!confirm('Supprimer définitivement cet article ?')) return
+    await store.deleteBlogArticle(id); charger()
+  }
+
+  if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
+
+  // Vue formulaire (nouveau/modifier)
+  if (edition !== null) {
+    return (
+      <div className="p-4 md:p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <button onClick={() => { setEdition(null); setBrouillon(vide) }} className="text-[#0A69AD] text-sm font-bold hover:underline">← Retour</button>
+          <h2 className="text-lg font-black text-[#065280]">{edition === 'nouveau' ? 'Nouvel article' : 'Modifier l\'article'}</h2>
+        </div>
+        <div className="bg-white border border-gray-100 rounded-2xl p-5 space-y-4">
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Titre *</label>
+            <input value={brouillon.titre} onChange={e => setBrouillon(b => ({ ...b, titre: e.target.value }))}
+              placeholder="Ex: Comprendre la TVA au Cameroun en 2026"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Catégorie</label>
+              <select value={brouillon.categorie} onChange={e => setBrouillon(b => ({ ...b, categorie: e.target.value }))}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#0A69AD] bg-white">
+                {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-3 mt-5">
+              <input type="checkbox" id="publie_check" checked={brouillon.publie}
+                onChange={e => setBrouillon(b => ({ ...b, publie: e.target.checked }))}
+                className="w-4 h-4 rounded accent-[#0A69AD]" />
+              <label htmlFor="publie_check" className="text-sm text-gray-700 font-semibold cursor-pointer">Publier sur le site</label>
+            </div>
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Extrait court (aperçu sur les cartes)</label>
+            <textarea rows={2} value={brouillon.extrait} onChange={e => setBrouillon(b => ({ ...b, extrait: e.target.value }))}
+              placeholder="Résumé en 1-2 phrases..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Contenu complet</label>
+            <textarea rows={10} value={brouillon.contenu} onChange={e => setBrouillon(b => ({ ...b, contenu: e.target.value }))}
+              placeholder="Rédigez ici le contenu complet de l'article..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
+          </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-2">Image de couverture</label>
+            {brouillon.image_url ? (
+              <div className="relative mb-2">
+                <img src={brouillon.image_url} alt="" className="w-full h-36 object-cover rounded-xl" />
+                <button onClick={() => setBrouillon(b => ({ ...b, image_url: '' }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm">✕</button>
+              </div>
+            ) : (
+              <label className={`flex items-center justify-center gap-2 h-16 border-2 border-dashed rounded-xl cursor-pointer bg-white transition-colors ${uploading ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD]'}`}>
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploading} className="hidden" />
+                <span className="text-sm text-gray-500">{uploading ? '⏳ Upload en cours…' : '🖼️ Ajouter une image de couverture'}</span>
+              </label>
+            )}
+          </div>
+          <div className="flex gap-3 pt-2">
+            <button onClick={sauvegarder} disabled={!brouillon.titre}
+              className="bg-[#C9A227] text-[#065280] font-black px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 hover:bg-[#b8932a] transition-colors">
+              {edition === 'nouveau' ? 'Créer l\'article' : 'Enregistrer'}
+            </button>
+            <button onClick={() => { setEdition(null); setBrouillon(vide) }} className="text-gray-500 px-5 py-2.5 text-sm">Annuler</button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Vue liste
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-black text-[#065280]">Blog & Actualités</h2>
+          <p className="text-xs text-gray-500">Articles publiés sur le site — optimisés pour Google</p>
+        </div>
+        <button onClick={() => { setBrouillon(vide); setEdition('nouveau') }}
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+          <Plus size={16} /> Nouvel article
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {articles.length === 0 && (
+          <div className="bg-[#F4F6F8] rounded-2xl p-10 text-center">
+            <p className="text-3xl mb-2">✍️</p>
+            <p className="text-gray-400 text-sm">Aucun article. Créez votre premier article de blog.</p>
+            <p className="text-gray-400 text-xs mt-1">Les articles aident à vous trouver sur Google.</p>
+          </div>
+        )}
+        {articles.map((article) => {
+          const categLabel = CATEGORIES.find(c => c.value === article.categorie)?.label || '📰 Actualités'
+          return (
+            <div key={article.id} className={`bg-white border rounded-2xl p-4 ${article.publie ? 'border-[#0A69AD]/20' : 'border-gray-100 opacity-70'}`}>
+              <div className="flex gap-4 items-start">
+                {article.image_url && <img src={article.image_url} alt="" className="w-14 h-14 rounded-xl object-cover shrink-0" />}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                    <span className="text-xs bg-[#F4F6F8] text-[#065280] font-bold px-2 py-0.5 rounded-full">{categLabel}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full flex items-center gap-0.5 ${article.publie ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      {article.publie ? <><CheckCircle2 size={10} /> Publié</> : '📝 Brouillon'}
+                    </span>
+                    <span className="text-xs text-gray-400">{new Date(article.created_at).toLocaleDateString('fr-FR')}</span>
+                  </div>
+                  <p className="font-black text-[#065280] text-sm">{article.titre}</p>
+                  {article.extrait && <p className="text-gray-400 text-xs mt-0.5 line-clamp-1">{article.extrait}</p>}
+                </div>
+                <div className="flex flex-col gap-1.5 shrink-0">
+                  <button
+                    onClick={() => { setBrouillon({ titre: article.titre, extrait: article.extrait || '', contenu: article.contenu || '', image_url: article.image_url || '', categorie: article.categorie || 'actualites', publie: article.publie }); setEdition(article) }}
+                    className="text-[#0A69AD] text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-[#F4F6F8] flex items-center gap-1">
+                    <Pencil size={12} /> Modifier
+                  </button>
+                  <button onClick={() => togglePublie(article)}
+                    className={`text-xs font-bold px-3 py-1.5 rounded-xl transition-colors ${article.publie ? 'bg-gray-100 text-gray-600 hover:bg-gray-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}>
+                    {article.publie ? 'Dépublier' : 'Publier'}
+                  </button>
+                  <button onClick={() => supprimer(article.id)} className="text-xs text-red-500 font-bold px-3 py-1.5 rounded-xl hover:bg-red-50">Supprimer</button>
                 </div>
               </div>
             </div>
@@ -1102,17 +1163,12 @@ export default function AdminDashboard() {
     }
   }, [navigate])
 
-  // Charger les stats du dashboard
   useEffect(() => {
     if (actif !== 'accueil') return
     Promise.all([
-      store.getServices(),
-      store.getFormations(),
-      store.getEquipe(),
-      store.getTemoignages(),
-      store.getAnnonces(),
-      store.getGalerie(),
-    ]).then(([s, f, e, t, a, g]) => {
+      store.getServices(), store.getFormations(), store.getEquipe(),
+      store.getTemoignages(), store.getAnnonces(), store.getGalerie(), store.getBlogArticles()
+    ]).then(([s, f, e, t, a, g, b]) => {
       setDashStats({
         services: (s || []).length,
         formations: (f || []).length,
@@ -1120,6 +1176,8 @@ export default function AdminDashboard() {
         temoignages: (t || []).length,
         annoncesActives: (a || []).filter(x => x.actif).length,
         galerie: (g || []).length,
+        articles: (b || []).length,
+        articlesPublies: (b || []).filter(x => x.publie).length,
       })
     })
   }, [actif])
@@ -1129,8 +1187,7 @@ export default function AdminDashboard() {
 
   const derniereConnexion = (() => {
     const ts = sessionStorage.getItem('bksc_admin_time')
-    if (!ts) return null
-    return new Date(parseInt(ts)).toLocaleString('fr-FR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' })
+    return ts ? new Date(parseInt(ts)).toLocaleString('fr-FR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }) : null
   })()
 
   return (
@@ -1141,13 +1198,13 @@ export default function AdminDashboard() {
         <img src="/logo.png" alt="BKSC" className="h-8 bg-white/95 rounded-lg p-1" />
         <div className="flex items-center gap-2">
           <span className="text-[#C9A227] text-xs font-bold truncate max-w-[130px]">{menu.find(m => m.id === actif)?.label}</span>
-          <button onClick={() => setMenuMobileOuvert(!menuMobileOuvert)} className="text-white p-1.5 bg-white/10 rounded-lg hover:bg-white/20 transition-colors">
+          <button onClick={() => setMenuMobileOuvert(!menuMobileOuvert)} className="text-white p-1.5 bg-white/10 rounded-lg">
             {menuMobileOuvert ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
       </div>
 
-      {/* MENU MOBILE DROPDOWN */}
+      {/* MENU MOBILE */}
       {menuMobileOuvert && (
         <div className="md:hidden bg-[#065280] border-t border-white/10 px-3 py-2 flex flex-col gap-1 sticky top-[52px] z-40 shadow-xl">
           {menu.map((item) => {
@@ -1177,7 +1234,7 @@ export default function AdminDashboard() {
             const Icon = item.icon
             return (
               <button key={item.id} onClick={() => setActif(item.id)}
-                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all duration-150 ${actif === item.id ? 'bg-[#C9A227] text-[#065280] shadow-md' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>
+                className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-bold transition-all ${actif === item.id ? 'bg-[#C9A227] text-[#065280] shadow-md' : 'text-gray-300 hover:bg-white/10 hover:text-white'}`}>
                 <Icon size={17} /> {item.label}
               </button>
             )
@@ -1193,38 +1250,35 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
-      {/* CONTENU PRINCIPAL */}
+      {/* CONTENU */}
       <main className="flex-1 overflow-y-auto">
         {actif === 'accueil' && (
           <div className="p-4 md:p-8">
-            <div className="mb-8">
+            <div className="mb-6">
               <h1 className="text-2xl font-black text-[#065280]">Tableau de bord</h1>
-              <p className="text-gray-400 text-sm mt-1">
-                {derniereConnexion ? `Dernière connexion : ${derniereConnexion}` : 'Bienvenue'}
-              </p>
+              <p className="text-gray-400 text-sm mt-1">{derniereConnexion ? `Dernière connexion : ${derniereConnexion}` : 'Bienvenue'}</p>
             </div>
 
-            {/* Stats réelles */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-5">
               {[
-                { label: 'Services actifs', valeur: dashStats?.services, icon: Briefcase, color: 'from-[#0A69AD] to-[#065280]', id: 'services' },
+                { label: 'Services', valeur: dashStats?.services, icon: Briefcase, color: 'from-[#0A69AD] to-[#065280]', id: 'services' },
                 { label: 'Formations', valeur: dashStats?.formations, icon: GraduationCap, color: 'from-[#065280] to-[#044060]', id: 'formations' },
-                { label: 'Membres équipe', valeur: dashStats?.equipe, icon: Users, color: 'from-[#C9A227] to-[#b8932a]', id: 'equipe' },
+                { label: 'Équipe', valeur: dashStats?.equipe, icon: Users, color: 'from-[#C9A227] to-[#b8932a]', id: 'equipe' },
                 { label: 'Témoignages', valeur: dashStats?.temoignages, icon: Quote, color: 'from-[#0A69AD] to-[#065280]', id: 'temoignages' },
                 { label: 'Annonces actives', valeur: dashStats?.annoncesActives, icon: Megaphone, color: 'from-[#065280] to-[#044060]', id: 'annonces' },
                 { label: 'Photos galerie', valeur: dashStats?.galerie, icon: Camera, color: 'from-[#C9A227] to-[#b8932a]', id: 'galerie' },
+                { label: 'Articles blog', valeur: dashStats?.articles, icon: FileText, color: 'from-[#0A69AD] to-[#065280]', id: 'blog' },
+                { label: 'Articles publiés', valeur: dashStats?.articlesPublies, icon: CheckCircle2, color: 'from-green-600 to-green-700', id: 'blog' },
               ].map((stat) => {
                 const Icon = stat.icon
                 return (
                   <button key={stat.label} onClick={() => changerSection(stat.id)}
-                    className="bg-white border border-gray-100 rounded-2xl p-5 text-left hover:shadow-lg hover:border-[#0A69AD]/20 hover:-translate-y-0.5 transition-all duration-200 group">
+                    className="bg-white border border-gray-100 rounded-2xl p-4 text-left hover:shadow-lg hover:border-[#0A69AD]/20 hover:-translate-y-0.5 transition-all duration-200 group">
                     <div className={`w-10 h-10 bg-gradient-to-br ${stat.color} rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform shadow-md`}>
                       <Icon className="text-white" size={18} />
                     </div>
                     <p className="text-2xl font-black text-[#065280]">
-                      {dashStats === null ? (
-                        <span className="inline-block w-6 h-5 bg-gray-200 rounded animate-pulse" />
-                      ) : (stat.valeur ?? 0)}
+                      {dashStats === null ? <span className="inline-block w-6 h-5 bg-gray-200 rounded animate-pulse" /> : (stat.valeur ?? 0)}
                     </p>
                     <p className="text-gray-500 text-xs mt-0.5 font-semibold">{stat.label}</p>
                   </button>
@@ -1232,18 +1286,17 @@ export default function AdminDashboard() {
               })}
             </div>
 
-            {/* Actions rapides */}
             <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4">
               <h3 className="font-black text-[#065280] text-sm mb-3">Actions rapides</h3>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                 {[
                   { label: 'Nouvelle annonce', id: 'annonces', icon: '📢' },
+                  { label: 'Nouvel article', id: 'blog', icon: '✍️' },
                   { label: 'Ajouter photo', id: 'galerie', icon: '📸' },
-                  { label: 'Nouveau témoignage', id: 'temoignages', icon: '💬' },
                   { label: 'Paramètres', id: 'parametres', icon: '⚙️' },
                 ].map(action => (
-                  <button key={action.id} onClick={() => changerSection(action.id)}
-                    className="bg-[#F4F6F8] hover:bg-[#e8ecf0] border border-gray-100 rounded-xl p-3 text-center transition-colors text-sm font-semibold text-[#065280]">
+                  <button key={action.id + action.label} onClick={() => changerSection(action.id)}
+                    className="bg-[#F4F6F8] hover:bg-[#e8ecf0] border border-gray-100 rounded-xl p-3 text-center transition-colors text-xs font-semibold text-[#065280]">
                     <span className="text-xl block mb-1">{action.icon}</span>
                     {action.label}
                   </button>
@@ -1255,18 +1308,16 @@ export default function AdminDashboard() {
               <CheckCircle2 className="text-green-600 mt-0.5 shrink-0" size={18} />
               <div>
                 <p className="font-bold">Connecté à Supabase</p>
-                <p className="text-xs text-green-700 mt-0.5">Vos modifications sont synchronisées en temps réel sur tous les appareils des visiteurs.</p>
+                <p className="text-xs text-green-700 mt-0.5">Modifications synchronisées en temps réel sur tous les appareils.</p>
               </div>
             </div>
           </div>
         )}
 
         {actif === 'annonces' && <SectionAnnonces />}
+        {actif === 'blog' && <SectionBlog />}
         {actif === 'services' && (
-          <SectionListe
-            titre="Services"
-            description="Gérez les 6 services affichés sur le site"
-            getter={store.getServices} setter={store.setServices}
+          <SectionListe titre="Services" description="Gérez les 6 services affichés sur le site" getter={store.getServices} setter={store.setServices}
             champs={[
               { cle: 'titre', label: 'Titre du service' },
               { cle: 'accroche', label: 'Accroche courte' },

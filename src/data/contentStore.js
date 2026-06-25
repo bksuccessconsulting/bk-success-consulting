@@ -29,6 +29,7 @@ const DEFAUTS = {
   },
 }
 
+// ============ CRUD JSONB (services, formations, équipe, etc.) ============
 async function lire(cle) {
   try {
     const { data, error } = await supabase
@@ -38,9 +39,7 @@ async function lire(cle) {
       return data.valeur
     }
     if (error) console.warn(`Supabase lecture "${cle}":`, error.message)
-  } catch (e) {
-    console.warn(`Supabase connexion "${cle}":`, e.message)
-  }
+  } catch (e) { console.warn(`Supabase "${cle}":`, e.message) }
   try {
     const local = localStorage.getItem(cle)
     if (local) return JSON.parse(local)
@@ -56,13 +55,11 @@ async function ecrire(cle, valeur) {
       .upsert({ cle, valeur, updated_at: new Date().toISOString() })
     if (error) { console.error(`Supabase écriture "${cle}":`, error.message); return false }
     return true
-  } catch (e) {
-    console.error(`Supabase "${cle}":`, e.message)
-    return false
-  }
+  } catch (e) { console.error(`Supabase "${cle}":`, e.message); return false }
 }
 
 export const store = {
+  // ============ CONTENU JSONB ============
   getServices: () => lire('bksc_services'),
   setServices: (v) => ecrire('bksc_services', v),
   getFormations: () => lire('bksc_formations'),
@@ -78,6 +75,7 @@ export const store = {
   getSettings: () => lire('bksc_settings'),
   setSettings: (v) => ecrire('bksc_settings', v),
 
+  // ============ ANNONCES ============
   getAnnonces: async () => {
     try {
       const { data, error } = await supabase
@@ -121,5 +119,42 @@ export const store = {
       if (error) throw error
       return true
     } catch (e) { console.error('Suppression annonce:', e.message); return false }
+  },
+
+  // ============ BLOG ============
+  getBlogArticles: async (publieSeulement = false) => {
+    try {
+      let query = supabase.from('blog_articles').select('*').order('created_at', { ascending: false })
+      if (publieSeulement) query = query.eq('publie', true)
+      const { data, error } = await query
+      if (error) throw error
+      return data || []
+    } catch (e) { console.warn('Blog:', e.message); return [] }
+  },
+
+  addBlogArticle: async (article) => {
+    try {
+      const { data, error } = await supabase.from('blog_articles')
+        .insert([{ ...article, updated_at: new Date().toISOString() }]).select()
+      if (error) throw error
+      return data[0]
+    } catch (e) { console.error('Ajout article:', e.message); return null }
+  },
+
+  updateBlogArticle: async (id, updates) => {
+    try {
+      const { error } = await supabase.from('blog_articles')
+        .update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id)
+      if (error) throw error
+      return true
+    } catch (e) { console.error('MAJ article:', e.message); return false }
+  },
+
+  deleteBlogArticle: async (id) => {
+    try {
+      const { error } = await supabase.from('blog_articles').delete().eq('id', id)
+      if (error) throw error
+      return true
+    } catch (e) { console.error('Suppression article:', e.message); return false }
   },
 }
