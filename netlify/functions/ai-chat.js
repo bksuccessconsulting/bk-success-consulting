@@ -1,115 +1,52 @@
-// Backend sécurisé — clé API jamais exposée côté client
-const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, 
-cabinet comptable et de conseil basé à Douala, Cameroun.
+const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, cabinet comptable basé à Douala, Cameroun.
 
-INFORMATIONS CABINET :
-- Nom : BK SUCCESS CONSULTING SARL
+CABINET :
 - Adresse : Ndogbong Citadelle, Douala (100m de IPH)
-- Téléphone : +237 657 37 89 27 / +237 673 40 92 31
+- Tél : +237 657 37 89 27 / +237 673 40 92 31
 - WhatsApp : +237 657 37 89 27
 - Email : bksuccessconsulting@gmail.com
 - RCCM : RC/DLN/2019/B/1069 | NIU : M051912785954F
 - Fondé en 2019 | SARL Droit OHADA
-- Horaires : Lun-Ven 08h00-17h00 | Sam 08h00-13h00
 
-SERVICES PROPOSÉS :
-1. Comptabilité SYSCOHADA révisé (états financiers, bilan, rapprochement bancaire)
-2. Fiscalité & Déclarations (TVA 19,25%, IS, DSF, patentes, DGI)
-3. Social & Paie (CNPS, bulletins de salaire, DIPE, IRPP)
-4. Juridique & Structuration (création entreprise CFCE, statuts OHADA, AGO/AGE)
-5. Audit & Contrôle de gestion (tableaux de bord, KPIs, analyse financière)
-6. Conseil en gestion (budget, optimisation fiscale, business plan, financement)
+SERVICES : Comptabilité SYSCOHADA, Fiscalité (TVA 19.25%, IS, DSF), Social & Paie (CNPS), Juridique (création entreprise CFCE), Audit, Conseil en gestion
 
-FORMATIONS CERTIFIANTES (Attestation BKSC avec mention) :
-- Module 1 : Comptabilité Pratique OHADA → Sessions : janv & juil
-- Module 2 : Fiscalité PME & DSF Pratique → Sessions : avr & oct
-- Module 3 : Création d'Entreprise / CNPS / Paie → Session : juil
-- Module 4 : Audit Interne & Outils Numériques → Session : oct
-Tarifs : Étudiants 110 000 | Salariés 150 000 | Chefs d'entreprise 200 000 FCFA
-Frais inscription : 10 000 FCFA | Durée : 3 mois / 240h | 10 places max
+FORMATIONS (110 000 à 200 000 FCFA, 3 mois, attestation) :
+Module 1: Comptabilité OHADA | Module 2: Fiscalité DSF | Module 3: Création entreprise/CNPS | Module 4: Audit numérique
 
-CONNAISSANCES FISCALES CAMEROUN :
-- TVA : 19,25% - déclaration mensuelle sur portail DGI
-- IS : acomptes mensuels, taux standard 33%
-- DSF : Déclaration Statistique et Fiscale annuelle (CF1, CF2, annexes)
-- Patente : impôt professionnel annuel
-- CNPS : cotisation employeur 16,2% + salarié 4,2% du salaire brut
-- IRPP : retenu à la source sur salaires
-- Création SARL : capital minimum 1 000 000 FCFA, dossier CFCE complet
+FISCALITÉ CAMEROUN : TVA 19.25% mensuelle DGI, IS 33% acomptes mensuels, DSF annuelle CF1+CF2, CNPS employeur 16.2%+salarié 4.2%, IRPP retenu source
 
-TON RÔLE :
-- Répondre aux questions sur la fiscalité et comptabilité camerounaise
-- Expliquer les démarches de création d'entreprise au Cameroun
-- Présenter les services et formations de BKSC
-- Donner des estimations simples (TVA, salaire brut/net, CNPS)
-- Pour devis ou consultations → inviter à contacter WhatsApp +237 657 37 89 27
+RÈGLES : Réponds en français, max 150 mots, professionnel. Pour devis → WhatsApp +237 657 37 89 27`
 
-RÈGLES ABSOLUES :
-- Toujours répondre en français (sauf si l'utilisateur écrit en anglais)
-- Être professionnel, précis et rassurant
-- Réponses courtes et claires (max 150 mots)
-- Pour toute demande complexe → suggérer une consultation au cabinet
-- Ne jamais inventer des informations fiscales non vérifiées`
-
-// Rate limiting anti-spam (8 requêtes/minute/IP maximum)
-const compteurs = new Map()
-
-function verifierLimite(ip) {
-  const maintenant = Date.now()
-  const fenetre = 60 * 1000
-  const cle = `${ip}:${Math.floor(maintenant / fenetre)}`
-  const count = (compteurs.get(cle) || 0) + 1
-  compteurs.set(cle, count)
-  if (compteurs.size > 500) {
-    const ancienne = `${ip}:${Math.floor((maintenant - fenetre) / fenetre)}`
-    compteurs.delete(ancienne)
-  }
-  return count > 8
-}
-
-const CORS = {
+const CORS_HEADERS = {
   'Content-Type': 'application/json',
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
-exports.handler = async (event) => {
+// ⚠️ Format CommonJS obligatoire pour Netlify Functions
+exports.handler = async function(event, context) {
+  // Preflight CORS
   if (event.httpMethod === 'OPTIONS') {
-    return { statusCode: 200, headers: CORS, body: '' }
+    return { statusCode: 200, headers: CORS_HEADERS, body: '' }
   }
 
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
-      headers: CORS,
+      headers: CORS_HEADERS,
       body: JSON.stringify({ error: 'Méthode non autorisée' })
     }
   }
 
-  // Vérification rate limiting
-  const ip = event.headers['x-forwarded-for']?.split(',')[0]?.trim()
-    || event.headers['client-ip']
-    || 'unknown'
-
-  if (verifierLimite(ip)) {
-    return {
-      statusCode: 429,
-      headers: CORS,
-      body: JSON.stringify({
-        error: 'Trop de questions envoyées. Attendez 1 minute.'
-      })
-    }
-  }
-
-  // Vérification clé API
+  // Vérifier la clé API
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    console.error('GEMINI_API_KEY manquante')
+    console.error('GEMINI_API_KEY manquante dans les variables Netlify')
     return {
       statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({ error: 'Configuration serveur incomplète' })
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ error: 'Configuration serveur incomplète. Contactez l\'administrateur.' })
     }
   }
 
@@ -120,77 +57,79 @@ exports.handler = async (event) => {
     if (!messages.length) {
       return {
         statusCode: 400,
-        headers: CORS,
+        headers: CORS_HEADERS,
         body: JSON.stringify({ error: 'Message vide' })
       }
     }
 
-    // Garder seulement les 10 derniers messages (économie de tokens)
-    const messagesRecents = messages.slice(-10)
+    // Garder max 8 messages pour économiser les tokens
+    const recent = messages.slice(-8)
 
-    // Construire l'historique pour Gemini
-    const contenu = messagesRecents.map(m => ({
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [{ text: m.content }]
-    }))
+    // Construire l'historique Gemini (user → user, assistant → model)
+    const contents = recent.map(function(m) {
+      return {
+        role: m.role === 'assistant' ? 'model' : 'user',
+        parts: [{ text: String(m.content || '') }]
+      }
+    })
 
-    // Appel API Gemini (gratuit - gemini-1.5-flash)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
+    // Appel Gemini 1.5 Flash (gratuit, rapide)
+    const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + apiKey
 
-    const reponseAPI = await fetch(url, {
+    const geminiResponse = await fetch(geminiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        contents: contenu,
+        contents: contents,
         systemInstruction: {
           parts: [{ text: SYSTEM_PROMPT }]
         },
         generationConfig: {
-          maxOutputTokens: 400,
-          temperature: 0.7,
+          maxOutputTokens: 350,
+          temperature: 0.7
         }
       })
     })
 
-    if (!reponseAPI.ok) {
-      const errTexte = await reponseAPI.text()
-      console.error('Erreur Gemini API:', reponseAPI.status, errTexte)
+    if (!geminiResponse.ok) {
+      const errText = await geminiResponse.text()
+      console.error('Erreur Gemini:', geminiResponse.status, errText)
       return {
         statusCode: 502,
-        headers: CORS,
-        body: JSON.stringify({
-          error: 'Service IA temporairement indisponible. Contactez-nous sur WhatsApp.'
-        })
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ error: 'Service IA indisponible. Contactez-nous sur WhatsApp.' })
       }
     }
 
-    const donnees = await reponseAPI.json()
-    const texte = donnees.candidates?.[0]?.content?.parts?.[0]?.text
+    const data = await geminiResponse.json()
+    const reponse = data.candidates &&
+      data.candidates[0] &&
+      data.candidates[0].content &&
+      data.candidates[0].content.parts &&
+      data.candidates[0].content.parts[0] &&
+      data.candidates[0].content.parts[0].text
 
-    if (!texte) {
+    if (!reponse) {
+      console.error('Réponse Gemini vide:', JSON.stringify(data))
       return {
         statusCode: 500,
-        headers: CORS,
-        body: JSON.stringify({
-          error: 'Réponse vide du service IA. Réessayez.'
-        })
+        headers: CORS_HEADERS,
+        body: JSON.stringify({ error: 'Réponse vide du service IA. Réessayez.' })
       }
     }
 
     return {
       statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify({ reponse: texte })
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ reponse: reponse })
     }
 
   } catch (err) {
-    console.error('Erreur fonction ai-chat:', err.message)
+    console.error('Erreur ai-chat:', err.message)
     return {
       statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({
-        error: 'Erreur serveur. Contactez-nous sur WhatsApp.'
-      })
+      headers: CORS_HEADERS,
+      body: JSON.stringify({ error: 'Erreur serveur. Réessayez ou contactez WhatsApp.' })
     }
   }
 }
