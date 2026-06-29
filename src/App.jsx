@@ -13,6 +13,7 @@ import Services from './pages/Services'
 import Formations from './pages/Formations'
 import Blog from './pages/Blog'
 import Contact from './pages/Contact'
+import Quiz from './pages/Quiz'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
 
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/services" element={<PublicLayout><Services /></PublicLayout>} />
             <Route path="/formations" element={<PublicLayout><Formations /></PublicLayout>} />
             <Route path="/blog" element={<PublicLayout><Blog /></PublicLayout>} />
+            <Route path="/quiz" element={<PublicLayout><Quiz /></PublicLayout>} />
             <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={

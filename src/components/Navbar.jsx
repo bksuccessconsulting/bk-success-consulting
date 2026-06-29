@@ -10,13 +10,14 @@ export default function Navbar() {
   const location = useLocation()
 
   const liens = [
-    { nom: 'Accueil', chemin: '/' },
-    { nom: 'À propos', chemin: '/about' },
-    { nom: 'Services', chemin: '/services' },
-    { nom: 'Formations', chemin: '/formations' },
-    { nom: 'Blog', chemin: '/blog' },
-    { nom: 'Contact', chemin: '/contact' },
-  ]
+  { nom: 'Accueil', chemin: '/' },
+  { nom: 'À propos', chemin: '/about' },
+  { nom: 'Services', chemin: '/services' },
+  { nom: 'Formations', chemin: '/formations' },
+  { nom: 'Quiz', chemin: '/quiz' },
+  { nom: 'Blog', chemin: '/blog' },
+  { nom: 'Contact', chemin: '/contact' },
+]
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30)

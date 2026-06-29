@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Loader2, Sparkles, User, Globe, ChevronRight } from 'lucide-react'
 import { cabinetInfo } from '../data/content'
 
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`
-
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`
 const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, cabinet comptable et de conseil basé à Douala, Cameroun.
 
 INFORMATIONS CABINET :
@@ -139,11 +138,23 @@ export default function AIAssistant() {
       const res = await fetch(GEMINI_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents,
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT + (langue === 'en' ? '\n\nIMPORTANT: The user is writing in English, respond in English.' : '') }] },
-          generationConfig: { maxOutputTokens: 400, temperature: 0.7 }
-        })
+       body: JSON.stringify({
+  contents: [
+    {
+      role: 'user',
+      parts: [{
+        text: SYSTEM_PROMPT + (langue === 'en'
+          ? '\n\nIMPORTANT: Respond in English.'
+          : '')
+      }]
+    },
+    ...contents
+  ],
+  generationConfig: {
+    maxOutputTokens: 400,
+    temperature: 0.7
+  }
+})
       })
 
       if (!res.ok) {
