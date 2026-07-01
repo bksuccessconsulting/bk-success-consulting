@@ -27,6 +27,8 @@ const DEFAUTS = {
     youtube: reseauxSociaux.youtube,
     tiktok: reseauxSociaux.tiktok,
   },
+  bksc_quiz_custom: { ohada: [], fiscalite: [], creation: [], social: [], audit: [] },
+bksc_galerie_videos: [],
 }
 
 // ============ CRUD JSONB (services, formations, équipe, etc.) ============
@@ -74,6 +76,10 @@ export const store = {
   setGalerie: (v) => ecrire('bksc_galerie', v),
   getSettings: () => lire('bksc_settings'),
   setSettings: (v) => ecrire('bksc_settings', v),
+  getQuizCustom: () => lire('bksc_quiz_custom'),
+setQuizCustom: (v) => ecrire('bksc_quiz_custom', v),
+getGalerieVideos: () => lire('bksc_galerie_videos'),
+setGalerieVideos: (v) => ecrire('bksc_galerie_videos', v),
 
   // ============ ANNONCES ============
   getAnnonces: async () => {

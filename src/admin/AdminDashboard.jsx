@@ -46,6 +46,8 @@ const menu = [
   { id: 'equipe', label: 'Équipe & Photos', icon: Users },
   { id: 'temoignages', label: 'Témoignages', icon: Quote },
   { id: 'galerie', label: 'Galerie Photos', icon: Camera },
+  { id: 'galerie_videos', label: 'Vidéos Cabinet', icon: Image },
+  { id: 'quiz_admin', label: 'Quiz Questions', icon: Star },
   { id: 'medias', label: 'Vidéo Hero', icon: Image },
   { id: 'parametres', label: 'Paramètres', icon: Settings },
   { id: 'messages', label: 'Messages', icon: Inbox },
@@ -1145,7 +1147,313 @@ function SectionBlog() {
     </div>
   )
 }
+// ============================================
+// SECTION VIDÉOS CABINET
+// ============================================
+function SectionGalerieVideos() {
+  const [items, setItems] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [uploading, setUploading] = useState(false)
+  const [progression, setProgression] = useState(0)
+  const [urlTemp, setUrlTemp] = useState('')
+  const [showForm, setShowForm] = useState(false)
+  const [brouillon, setBrouillon] = useState({ caption: '', categorie: 'cabinet' })
 
+  useEffect(() => {
+    let actif = true
+    store.getGalerieVideos().then(data => { if (actif) { setItems(data || []); setChargement(false) } })
+    return () => { actif = false }
+  }, [])
+
+  const handleUpload = async (e) => {
+    const fichier = e.target.files[0]; if (!fichier) return
+    setUploading(true); setProgression(0); setShowForm(true)
+    try { const url = await uploadCloudinary(fichier, 'video', setProgression); setUrlTemp(url) }
+    catch (err) { alert('Erreur upload: ' + err.message); setShowForm(false) }
+    setUploading(false)
+  }
+
+  const ajouter = async () => {
+    if (!urlTemp) return
+    const nouveau = { id: Date.now(), url: urlTemp, caption: brouillon.caption, categorie: brouillon.categorie }
+    const nouveaux = [...items, nouveau]
+    setItems(nouveaux); await store.setGalerieVideos(nouveaux)
+    setUrlTemp(''); setBrouillon({ caption: '', categorie: 'cabinet' }); setShowForm(false)
+  }
+
+  const supprimer = async (i) => {
+    if (!confirm('Supprimer cette vidéo ?')) return
+    const nouveaux = items.filter((_, idx) => idx !== i)
+    setItems(nouveaux); await store.setGalerieVideos(nouveaux)
+  }
+
+  if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
+
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-black text-[#065280]">Vidéos du Cabinet</h2>
+          <p className="text-xs text-gray-500">Vidéos de présentation, formations, événements</p>
+        </div>
+        <label className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 cursor-pointer transition-colors">
+          <input type="file" accept="video/*" onChange={handleUpload} disabled={uploading} className="hidden" />
+          <Plus size={16} /> Ajouter une vidéo
+        </label>
+      </div>
+
+      {uploading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+          <div className="w-full bg-blue-200 rounded-full h-2 mb-1">
+            <div className="bg-[#0A69AD] h-2 rounded-full transition-all" style={{ width: `${progression}%` }} />
+          </div>
+          <p className="text-xs text-[#0A69AD] font-semibold text-center">Upload vidéo… {progression}%</p>
+        </div>
+      )}
+
+      {showForm && urlTemp && (
+        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-4 mb-4 space-y-3">
+          <p className="font-bold text-[#065280] text-sm">✅ Vidéo uploadée — Ajouter des détails</p>
+          <video src={urlTemp} controls className="w-full rounded-xl max-h-36 object-cover" />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Légende (optionnel)</label>
+              <input value={brouillon.caption} onChange={e => setBrouillon(b => ({ ...b, caption: e.target.value }))}
+                placeholder="Ex: Séminaire fiscal 2026"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Catégorie</label>
+              <select value={brouillon.categorie} onChange={e => setBrouillon(b => ({ ...b, categorie: e.target.value }))}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+                <option value="cabinet">Cabinet</option>
+                <option value="formation">Formation</option>
+                <option value="evenement">Événement</option>
+                <option value="temoignage">Témoignage</option>
+              </select>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button onClick={ajouter} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm">Ajouter à la galerie</button>
+            <button onClick={() => { setShowForm(false); setUrlTemp('') }} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {items.map((item, i) => (
+          <div key={item.id || i} className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+            <video src={item.url} controls className="w-full h-40 object-cover bg-gray-100" />
+            <div className="p-3 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-bold text-[#065280] text-sm truncate">{item.caption || 'Vidéo sans titre'}</p>
+                <span className="text-[10px] bg-[#F4F6F8] text-[#065280] px-2 py-0.5 rounded-full font-semibold">{item.categorie}</span>
+              </div>
+              <button onClick={() => supprimer(i)} className="text-red-400 p-1.5 hover:bg-red-50 rounded-lg shrink-0">
+                <Trash2 size={15} />
+              </button>
+            </div>
+          </div>
+        ))}
+        {items.length === 0 && (
+          <div className="col-span-2 bg-[#F4F6F8] rounded-2xl p-10 text-center">
+            <p className="text-3xl mb-2">🎬</p>
+            <p className="text-gray-400 text-sm">Aucune vidéo. Uploadez des vidéos du cabinet.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ============================================
+// SECTION QUIZ ADMIN
+// ============================================
+function SectionQuizAdmin() {
+  const [customQuiz, setCustomQuiz] = useState({})
+  const [chargement, setChargement] = useState(true)
+  const [categorieActive, setCategorieActive] = useState('ohada')
+  const [showForm, setShowForm] = useState(false)
+  const [sauvegarde, setSauvegarde] = useState(false)
+  const videForm = { question: '', optionA: '', optionB: '', optionC: '', optionD: '', reponse: '0', explication: '' }
+  const [brouillon, setBrouillon] = useState(videForm)
+
+  useEffect(() => {
+    let actif = true
+    store.getQuizCustom().then(data => {
+      if (actif) {
+        setCustomQuiz(data || { ohada: [], fiscalite: [], creation: [], social: [], audit: [] })
+        setChargement(false)
+      }
+    })
+    return () => { actif = false }
+  }, [])
+
+  const questionsCustomCat = customQuiz[categorieActive] || []
+  const questionsHardcodees = (questionsHardcoded[categorieActive] || []).length
+
+  const ajouter = async () => {
+    if (!brouillon.question || !brouillon.optionA || !brouillon.optionB) {
+      alert('Question et au moins 2 options obligatoires.')
+      return
+    }
+    const options = [brouillon.optionA, brouillon.optionB, brouillon.optionC, brouillon.optionD].filter(Boolean)
+    const nouvelleQuestion = {
+      id: Date.now(),
+      question: brouillon.question,
+      options,
+      reponse: Math.min(parseInt(brouillon.reponse), options.length - 1),
+      explication: brouillon.explication || 'Pas d\'explication fournie.',
+    }
+    const nouveau = { ...customQuiz, [categorieActive]: [...questionsCustomCat, nouvelleQuestion] }
+    setCustomQuiz(nouveau)
+    await store.setQuizCustom(nouveau)
+    setSauvegarde(true)
+    setTimeout(() => setSauvegarde(false), 2000)
+    setBrouillon(videForm)
+    setShowForm(false)
+  }
+
+  const supprimer = async (idx) => {
+    if (!confirm('Supprimer cette question ?')) return
+    const nouveaux = questionsCustomCat.filter((_, i) => i !== idx)
+    const nouveau = { ...customQuiz, [categorieActive]: nouveaux }
+    setCustomQuiz(nouveau)
+    await store.setQuizCustom(nouveau)
+  }
+
+  if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
+
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-black text-[#065280]">Quiz — Gestion des questions</h2>
+          <p className="text-xs text-gray-500">Ajoutez vos propres questions en plus des questions permanentes</p>
+        </div>
+        <button onClick={() => setShowForm(true)}
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
+          <Plus size={16} /> Nouvelle question
+        </button>
+      </div>
+
+      {sauvegarde && (
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 text-xs px-3 py-2 rounded-xl mb-3">
+          <CheckCircle2 size={14} /> Question enregistrée dans Supabase ✓
+        </div>
+      )}
+
+      {/* Sélection catégorie */}
+      <div className="flex gap-2 overflow-x-auto pb-2 mb-5">
+        {categories.map(cat => (
+          <button key={cat.id} onClick={() => setCategorieActive(cat.id)}
+            className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              categorieActive === cat.id
+                ? 'bg-[#065280] text-white shadow-md'
+                : 'bg-[#F4F6F8] text-gray-600 hover:bg-gray-200'
+            }`}>
+            {cat.emoji} {cat.titre}
+          </button>
+        ))}
+      </div>
+
+      <div className="bg-[#F4F6F8] rounded-xl p-3 mb-4 flex items-center gap-3">
+        <div className="text-center px-4 border-r border-gray-200">
+          <p className="text-xl font-black text-[#065280]">{questionsHardcodees}</p>
+          <p className="text-xs text-gray-400">Permanentes</p>
+        </div>
+        <div className="text-center px-4">
+          <p className="text-xl font-black text-[#C9A227]">{questionsCustomCat.length}</p>
+          <p className="text-xs text-gray-400">Vos questions</p>
+        </div>
+        <div className="text-center px-4 border-l border-gray-200">
+          <p className="text-xl font-black text-green-600">{questionsHardcodees + questionsCustomCat.length}</p>
+          <p className="text-xs text-gray-400">Total</p>
+        </div>
+      </div>
+
+      {/* Formulaire ajout */}
+      {showForm && (
+        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 mb-4 space-y-3">
+          <h3 className="font-black text-[#065280] text-sm">Nouvelle question — {categories.find(c => c.id === categorieActive)?.titre}</h3>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Question *</label>
+            <textarea rows={2} value={brouillon.question} onChange={e => setBrouillon(b => ({ ...b, question: e.target.value }))}
+              placeholder="Ex: Quel est le taux de TVA au Cameroun ?"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {['optionA', 'optionB', 'optionC', 'optionD'].map((key, i) => (
+              <div key={key}>
+                <label className="text-xs font-semibold text-gray-500 block mb-1">Option {String.fromCharCode(65 + i)} {i < 2 ? '*' : ''}</label>
+                <input value={brouillon[key]} onChange={e => setBrouillon(b => ({ ...b, [key]: e.target.value }))}
+                  placeholder={`Réponse ${String.fromCharCode(65 + i)}`}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Bonne réponse *</label>
+              <select value={brouillon.reponse} onChange={e => setBrouillon(b => ({ ...b, reponse: e.target.value }))}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+                {['A', 'B', 'C', 'D'].map((l, i) => <option key={i} value={i}>Option {l}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Explication</label>
+              <input value={brouillon.explication} onChange={e => setBrouillon(b => ({ ...b, explication: e.target.value }))}
+                placeholder="Pourquoi cette réponse ?"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+            </div>
+          </div>
+          <div className="flex gap-2 pt-1">
+            <button onClick={ajouter} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm">Ajouter la question</button>
+            <button onClick={() => { setShowForm(false); setBrouillon(videForm) }} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
+          </div>
+        </div>
+      )}
+
+      {/* Questions permanentes (readonly) */}
+      <div className="mb-3">
+        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Questions permanentes (non modifiables) — {questionsHardcodees}</p>
+        <div className="space-y-1.5">
+          {(questionsHardcoded[categorieActive] || []).map((q, i) => (
+            <div key={i} className="bg-white border border-gray-100 rounded-xl p-3 flex items-center gap-2 opacity-60">
+              <span className="w-5 h-5 rounded-full bg-gray-100 text-gray-400 text-[10px] font-black flex items-center justify-center shrink-0">{i + 1}</span>
+              <p className="text-gray-500 text-xs truncate flex-1">{q.question}</p>
+              <span className="text-[10px] text-gray-400 shrink-0 bg-gray-100 px-2 py-0.5 rounded-full">Fixe</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Questions custom */}
+      <div>
+        <p className="text-xs font-bold text-[#065280] uppercase tracking-widest mb-2">Vos questions ajoutées — {questionsCustomCat.length}</p>
+        <div className="space-y-2">
+          {questionsCustomCat.map((q, i) => (
+            <div key={q.id || i} className="bg-white border border-[#0A69AD]/20 rounded-xl p-3 flex items-start gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#0A69AD] text-white text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">{questionsHardcodees + i + 1}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-[#065280] text-xs font-bold truncate">{q.question}</p>
+                <p className="text-gray-400 text-[10px] mt-0.5">Bonne réponse : Option {String.fromCharCode(65 + q.reponse)}</p>
+              </div>
+              <button onClick={() => supprimer(i)} className="text-red-400 p-1.5 hover:bg-red-50 rounded-lg shrink-0">
+                <Trash2 size={13} />
+              </button>
+            </div>
+          ))}
+          {questionsCustomCat.length === 0 && (
+            <div className="bg-[#F4F6F8] rounded-xl p-5 text-center">
+              <p className="text-gray-400 text-xs">Aucune question personnalisée. Cliquez sur "Nouvelle question".</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 // ============================================
 // DASHBOARD PRINCIPAL
 // ============================================
@@ -1294,6 +1602,8 @@ export default function AdminDashboard() {
                   { label: 'Nouvel article', id: 'blog', icon: '✍️' },
                   { label: 'Ajouter photo', id: 'galerie', icon: '📸' },
                   { label: 'Paramètres', id: 'parametres', icon: '⚙️' },
+                  { label: 'Vidéos cabinet', icon: '🎬', id: 'galerie_videos' },
+                  { label: 'Quiz questions', icon: '🧠', id: 'quiz_admin' },
                 ].map(action => (
                   <button key={action.id + action.label} onClick={() => changerSection(action.id)}
                     className="bg-[#F4F6F8] hover:bg-[#e8ecf0] border border-gray-100 rounded-xl p-3 text-center transition-colors text-xs font-semibold text-[#065280]">
@@ -1325,6 +1635,8 @@ export default function AdminDashboard() {
             ]} />
         )}
         {actif === 'formations' && <SectionFormations />}
+        {actif === 'galerie_videos' && <SectionGalerieVideos />}
+        {actif === 'quiz_admin' && <SectionQuizAdmin />}
         {actif === 'equipe' && <SectionEquipe />}
         {actif === 'temoignages' && <SectionTemoignages />}
         {actif === 'galerie' && <SectionGalerie />}
