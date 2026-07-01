@@ -15,7 +15,7 @@ export const cabinetInfo = {
   directeur: "[NOM DU DIRECTEUR]",
   titreDirecteur: "Directeur Général",
   adresse: "Ndogbong Citadelle, Douala, Région du Littoral, Cameroun",
-  repere: "Ndogbong, à 100m de IPH",
+  repere: "Ndogbong, ancien depot Guinness",
   telephonePrincipal: "+237 657 37 89 27",
   telephoneSecondaire: "+237 673 40 92 31",
   whatsapp: "237657378927",

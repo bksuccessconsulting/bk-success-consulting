@@ -8,6 +8,7 @@ import {
 import { store } from '../data/contentStore'
 import { clearAdminSession } from './AdminGuard'
 import { cabinetInfo } from '../data/content'
+import { categories, questions as questionsHardcoded } from '../data/quizData'
 
 // ============================================
 // HELPER CLOUDINARY

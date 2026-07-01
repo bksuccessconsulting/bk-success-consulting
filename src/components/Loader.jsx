@@ -42,9 +42,9 @@ export default function Loader({ onComplete }) {
             transition={{ duration: 0.5, ease: 'easeOut' }}
             className="relative mb-6 z-10"
           >
-            <div className="w-24 h-24 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center border border-white/20 shadow-2xl">
-              <img src="/logo.png" alt="BK Success Consulting"
-                className="h-16 w-auto object-contain filter brightness-0 invert" />
+            <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center shadow-2xl">
+             <img src="/logo.png" alt="BK Success Consulting"
+               className="h-16 w-auto object-contain p-1" />
             </div>
           </motion.div>
 
