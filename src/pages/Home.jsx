@@ -485,18 +485,86 @@ export default function Home() {
       </section>
 
       {/* ============ TÉMOIGNAGES PREMIUM ============ */}
-      <section className="relative py-20 overflow-hidden">
-        <div className="absolute inset-0 bg-[#065280]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(201,162,39,0.08)_0%,_transparent_55%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_rgba(10,105,173,0.2)_0%,_transparent_60%)]" />
-        <div className="relative max-w-5xl mx-auto px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-12">
-            <span className="text-[#C9A227] font-bold text-xs tracking-widest uppercase">Ce qu'ils disent</span>
-            <h2 className="text-3xl md:text-4xl font-black text-white mt-2">Ils nous font confiance</h2>
-          </motion.div>
-          <TestimonialsCarousel temoignages={temoignages} />
+      {/* ============ RÉFÉRENCES CLIENTS ============ */}
+<section className="bg-[#F4F6F8] py-20">
+  <div className="max-w-7xl mx-auto px-4">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+      className="text-center mb-14"
+    >
+      <span className="text-[#C9A227] font-bold text-xs tracking-widest uppercase">Ils nous font confiance</span>
+      <h2 className="text-3xl md:text-4xl font-black text-[#065280] mt-2">Nos Références Clients</h2>
+      <p className="text-gray-400 text-sm mt-2">Entreprises et institutions accompagnées par BK Success Consulting</p>
+    </motion.div>
+
+    {temoignages.length === 0 ? (
+      <div className="bg-white border border-gray-100 rounded-2xl p-12 max-w-lg mx-auto text-center">
+        <div className="w-16 h-16 bg-[#F4F6F8] rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <Users className="text-[#C9A227]" size={28} />
         </div>
-      </section>
+        <p className="text-gray-500 text-sm">Nos références clients seront publiées très prochainement.</p>
+      </div>
+    ) : (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {temoignages.map((ref, i) => (
+          <motion.div
+            key={ref.id || i}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: i * 0.07 }}
+            whileHover={{ y: -4 }}
+            className="bg-white rounded-2xl border border-gray-100 hover:border-[#C9A227] hover:shadow-xl transition-all duration-300 overflow-hidden group"
+          >
+            {/* Zone logo */}
+            <div className="h-36 flex items-center justify-center p-6 bg-white border-b border-gray-50">
+              {ref.photo ? (
+                <img
+                  src={ref.photo}
+                  alt={ref.nom}
+                  className="max-h-24 max-w-full object-contain group-hover:scale-105 transition-transform duration-300"
+                />
+              ) : (
+                <div className="w-20 h-20 bg-[#F4F6F8] rounded-2xl flex items-center justify-center">
+                  <Users className="text-[#C9A227]" size={32} />
+                </div>
+              )}
+            </div>
+
+            {/* Contenu */}
+            <div className="p-5">
+              <h3 className="font-black text-[#065280] text-base mb-3 leading-tight">
+                {ref.nom}
+              </h3>
+
+              {/* Badge secteur + Année */}
+              <div className="flex items-center gap-2 mb-3">
+                {ref.secteur && (
+                  <span className="bg-[#065280] text-white text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wide">
+                    {ref.secteur}
+                  </span>
+                )}
+                {ref.annee && (
+                  <span className="text-gray-400 text-sm font-semibold">{ref.annee}</span>
+                )}
+              </div>
+
+              {/* Description */}
+              {ref.texte && (
+                <p className="text-gray-500 text-xs leading-relaxed">
+                  {ref.texte}
+                </p>
+              )}
+            </div>
+
+            {/* Barre dorée en bas au hover */}
+            <div className="h-0.5 bg-gradient-to-r from-[#C9A227] to-[#065280] scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left" />
+          </motion.div>
+        ))}
+      </div>
+    )}
+  </div>
+</section>
 
       {/* ============ GALERIE ============ */}
       {galerie.length > 0 && (

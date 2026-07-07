@@ -419,33 +419,38 @@ function SectionTemoignages() {
   const [chargement, setChargement] = useState(true)
   const [edition, setEdition] = useState(null)
   const [uploading, setUploading] = useState(false)
-  const vide = { nom: '', entreprise: '', texte: '', note: '5', photo: '' }
+
+  const SECTEURS = ['Banque', 'Microfinance', 'PME', 'Commerce', 'Industrie', 'ONG', 'Assurance', 'Immobilier', 'Transport', 'Autre']
+
+  const vide = { nom: '', secteur: 'Banque', annee: new Date().getFullYear().toString(), texte: '', photo: '' }
   const [brouillon, setBrouillon] = useState(vide)
 
   useEffect(() => {
     let actif = true
-    store.getTemoignages().then((data) => { if (actif) { setItems(data || []); setChargement(false) } })
+    store.getTemoignages().then(data => { if (actif) { setItems(data || []); setChargement(false) } })
     return () => { actif = false }
   }, [])
 
-  const handlePhotoUpload = async (e) => {
+  const handleLogoUpload = async (e) => {
     const fichier = e.target.files[0]; if (!fichier) return
     setUploading(true)
-    try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, photo: url })) }
-    catch (err) { alert('Erreur: ' + err.message) }
+    try {
+      const url = await uploadCloudinary(fichier, 'image')
+      setBrouillon(b => ({ ...b, photo: url }))
+    } catch (err) { alert('Erreur upload: ' + err.message) }
     setUploading(false)
   }
 
   const sauvegarder = async () => {
-    if (!brouillon.nom || !brouillon.texte) { alert('Nom et texte obligatoires.'); return }
-    const item = { ...brouillon, note: parseInt(brouillon.note) || 5, id: Date.now() }
+    if (!brouillon.nom) { alert('Le nom est obligatoire.'); return }
     let nouveaux
-    if (edition === 'nouveau') nouveaux = [...items, item]
-    else nouveaux = items.map((it, i) => (i === edition ? { ...it, ...item } : it))
+    if (edition === 'nouveau') nouveaux = [...items, { ...brouillon, id: Date.now() }]
+    else nouveaux = items.map((it, i) => (i === edition ? { ...it, ...brouillon } : it))
     setItems(nouveaux); await store.setTemoignages(nouveaux); setEdition(null); setBrouillon(vide)
   }
+
   const supprimer = async (i) => {
-    if (!confirm('Supprimer ce témoignage ?')) return
+    if (!confirm('Supprimer cette référence ?')) return
     const nouveaux = items.filter((_, idx) => idx !== i)
     setItems(nouveaux); await store.setTemoignages(nouveaux)
   }
@@ -456,93 +461,164 @@ function SectionTemoignages() {
     <div className="p-4 md:p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-lg font-black text-[#065280]">Témoignages</h2>
-          <p className="text-xs text-gray-500">Apparaissent en carousel sur la page d'accueil</p>
+          <h2 className="text-lg font-black text-[#065280]">Références Clients</h2>
+          <p className="text-xs text-gray-500">Logo + secteur + année + description de la mission</p>
         </div>
         <button onClick={() => { setBrouillon(vide); setEdition('nouveau') }}
-          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5">
+          className="bg-[#0A69AD] hover:bg-[#065280] text-white text-sm font-bold px-4 py-2.5 rounded-xl flex items-center gap-1.5 transition-colors">
           <Plus size={16} /> Ajouter
         </button>
       </div>
 
+      {/* Formulaire */}
       {edition !== null && (
-        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 mb-4 space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Nom du client *</label>
-              <input value={brouillon.nom} onChange={(e) => setBrouillon({ ...brouillon, nom: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Entreprise</label>
-              <input value={brouillon.entreprise} onChange={(e) => setBrouillon({ ...brouillon, entreprise: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
-            </div>
-          </div>
+        <div className="bg-[#F4F6F8] border border-gray-200 rounded-2xl p-5 mb-5 space-y-4">
+          <h3 className="font-black text-[#065280] text-sm">{edition === 'nouveau' ? 'Nouvelle référence' : 'Modifier'}</h3>
+
+          {/* Nom */}
           <div>
-            <label className="text-xs font-semibold text-gray-500 block mb-1">Témoignage *</label>
-            <textarea rows={4} value={brouillon.texte} onChange={(e) => setBrouillon({ ...brouillon, texte: e.target.value })}
-              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Nom de l'entreprise *</label>
+            <input value={brouillon.nom} onChange={e => setBrouillon(b => ({ ...b, nom: e.target.value }))}
+              placeholder="Ex: AFRICA GOLDEN BANK"
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
           </div>
-          <div className="flex items-center gap-6">
+
+          {/* Secteur + Année */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Note</label>
-              <select value={brouillon.note} onChange={(e) => setBrouillon({ ...brouillon, note: e.target.value })}
-                className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
-                {[5,4,3,2,1].map(n => <option key={n} value={n}>{n} étoile{n > 1 ? 's' : ''}</option>)}
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Secteur</label>
+              <select value={brouillon.secteur} onChange={e => setBrouillon(b => ({ ...b, secteur: e.target.value }))}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+                {SECTEURS.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
             <div>
-              <label className="text-xs font-semibold text-gray-500 block mb-1">Photo</label>
-              <label className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 cursor-pointer text-sm text-gray-600 hover:border-[#0A69AD]">
-                <input type="file" accept="image/*" onChange={handlePhotoUpload} disabled={uploading} className="hidden" />
-                {uploading ? '⏳ Upload…' : brouillon.photo ? '✅ Chargée' : '📸 Photo client'}
-              </label>
+              <label className="text-xs font-semibold text-gray-500 block mb-1">Année</label>
+              <input value={brouillon.annee} onChange={e => setBrouillon(b => ({ ...b, annee: e.target.value }))}
+                placeholder="Ex: 2024"
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
             </div>
           </div>
-          <div className="flex gap-2">
-            <button onClick={sauvegarder} className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm">Enregistrer</button>
-            <button onClick={() => setEdition(null)} className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
+
+          {/* Description */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-1">Description de la mission</label>
+            <textarea rows={4} value={brouillon.texte} onChange={e => setBrouillon(b => ({ ...b, texte: e.target.value }))}
+              placeholder="Ex: Accompagnement dans la production des dossiers de demande d'autorisation d'ouverture de six agences de banque au Cameroun..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white resize-none" />
+          </div>
+
+          {/* Logo */}
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-2">Logo de l'entreprise</label>
+            {brouillon.photo ? (
+              <div className="flex items-center gap-4 p-3 bg-white rounded-xl border border-green-200 mb-2">
+                <img src={brouillon.photo} alt="" className="h-14 max-w-[120px] object-contain" />
+                <div>
+                  <p className="text-xs font-bold text-green-600 flex items-center gap-1">
+                    <CheckCircle2 size={12} /> Logo chargé
+                  </p>
+                  <button onClick={() => setBrouillon(b => ({ ...b, photo: '' }))}
+                    className="text-xs text-red-500 hover:underline mt-0.5">Changer</button>
+                </div>
+              </div>
+            ) : (
+              <label className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-xl cursor-pointer transition-colors mb-2 ${uploading ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD] bg-white'}`}>
+                <input type="file" accept="image/*" onChange={handleLogoUpload} disabled={uploading} className="hidden" />
+                {uploading ? (
+                  <div className="flex items-center gap-2 text-[#0A69AD]">
+                    <div className="w-4 h-4 border-2 border-[#0A69AD] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-semibold">Upload…</span>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-2xl mb-1">🏢</p>
+                    <p className="text-sm font-semibold text-[#065280]">Uploader le logo</p>
+                    <p className="text-xs text-gray-400">PNG, JPG (fond blanc recommandé)</p>
+                  </div>
+                )}
+              </label>
+            )}
+            <p className="text-xs text-gray-400 mb-1">Ou coller l'URL du logo :</p>
+            <input value={brouillon.photo} onChange={e => setBrouillon(b => ({ ...b, photo: e.target.value }))}
+              placeholder="https://..."
+              className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button onClick={sauvegarder} disabled={!brouillon.nom || uploading}
+              className="bg-[#C9A227] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm disabled:opacity-50 hover:bg-[#b8932a] transition-colors">
+              Enregistrer
+            </button>
+            <button onClick={() => { setEdition(null); setBrouillon(vide) }}
+              className="text-gray-500 px-4 py-2.5 text-sm">Annuler</button>
           </div>
         </div>
       )}
 
-      <div className="space-y-2 mt-4">
+      {/* Aperçu liste */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {items.map((item, i) => (
-          <div key={item.id || i} className="bg-white border border-gray-100 rounded-xl p-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-full bg-[#0A69AD] flex items-center justify-center overflow-hidden shrink-0">
-                {item.photo ? <img src={item.photo} alt={item.nom} className="w-full h-full object-cover" /> : <User className="text-white" size={16} />}
+          <div key={item.id || i}
+            className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:border-gray-200 transition-colors">
+            <div className="flex items-center gap-4 p-4">
+              {/* Logo */}
+              <div className="w-20 h-16 bg-[#F4F6F8] rounded-lg flex items-center justify-center shrink-0 overflow-hidden">
+                {item.photo
+                  ? <img src={item.photo} alt={item.nom} className="max-h-14 max-w-full object-contain p-1" />
+                  : <Users className="text-gray-400" size={24} />
+                }
               </div>
+
+              {/* Info */}
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-0.5">
-                  <p className="font-bold text-[#065280] text-sm">{item.nom}</p>
-                  {item.entreprise && <span className="text-xs text-gray-400">· {item.entreprise}</span>}
-                  <div className="flex gap-0.5 ml-auto">
-                    {[1,2,3,4,5].map(s => <Star key={s} size={10} className={s <= (item.note || 5) ? 'text-[#C9A227] fill-[#C9A227]' : 'text-gray-300'} />)}
-                  </div>
+                <p className="font-black text-[#065280] text-sm truncate">{item.nom}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  {item.secteur && (
+                    <span className="bg-[#065280] text-white text-[9px] font-black px-2 py-0.5 rounded-full uppercase">
+                      {item.secteur}
+                    </span>
+                  )}
+                  {item.annee && <span className="text-gray-400 text-xs">{item.annee}</span>}
                 </div>
-                <p className="text-gray-500 text-xs line-clamp-2">{item.texte}</p>
+                {item.texte && (
+                  <p className="text-gray-400 text-xs mt-1 line-clamp-1">{item.texte}</p>
+                )}
               </div>
-              <div className="flex gap-1.5 shrink-0">
-                <button onClick={() => { setBrouillon({ nom: item.nom || '', entreprise: item.entreprise || '', texte: item.texte || '', note: String(item.note || 5), photo: item.photo || '' }); setEdition(i) }}
-                  className="text-[#0A69AD] p-1.5 hover:bg-[#F4F6F8] rounded-lg"><Pencil size={13} /></button>
-                <button onClick={() => supprimer(i)} className="text-red-400 p-1.5 hover:bg-red-50 rounded-lg"><Trash2 size={13} /></button>
+
+              {/* Actions */}
+              <div className="flex gap-1 shrink-0">
+                <button onClick={() => {
+                  setBrouillon({
+                    nom: item.nom || '',
+                    secteur: item.secteur || 'Banque',
+                    annee: item.annee || '',
+                    texte: item.texte || '',
+                    photo: item.photo || ''
+                  })
+                  setEdition(i)
+                }} className="text-[#0A69AD] p-1.5 hover:bg-[#F4F6F8] rounded-lg">
+                  <Pencil size={14} />
+                </button>
+                <button onClick={() => supprimer(i)}
+                  className="text-red-400 p-1.5 hover:bg-red-50 rounded-lg">
+                  <Trash2 size={14} />
+                </button>
               </div>
             </div>
           </div>
         ))}
+
         {items.length === 0 && (
-          <div className="bg-[#F4F6F8] rounded-2xl p-8 text-center">
-            <Quote className="text-gray-300 mx-auto mb-2" size={28} />
-            <p className="text-gray-400 text-sm">Aucun témoignage. Ajoutez les retours de vos clients.</p>
+          <div className="col-span-2 bg-[#F4F6F8] rounded-2xl p-10 text-center">
+            <p className="text-3xl mb-2">🏢</p>
+            <p className="text-gray-400 text-sm">Aucune référence client. Ajoutez vos premiers clients.</p>
           </div>
         )}
       </div>
     </div>
   )
 }
-
 // ============================================
 // SECTION GALERIE
 // ============================================
