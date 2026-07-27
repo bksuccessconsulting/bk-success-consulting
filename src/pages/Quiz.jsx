@@ -384,6 +384,192 @@ function EcranQuiz({ categorieId, onTerminer }) {
     </div>
   )
 }
+// ============ FORMULAIRE PROSPECT (avant résultats) ============
+function FormulaireProspect({ onSoumis, categorie, score, total, reponses }) {
+  const [nom, setNom] = useState('')
+  const [email, setEmail] = useState('')
+  const [telephone, setTelephone] = useState('')
+  const [entreprise, setEntreprise] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [erreur, setErreur] = useState('')
+  const [consent, setConsent] = useState(false)
+
+  const soumettre = async (e) => {
+  e.preventDefault()
+  if (!nom.trim()) { setErreur('Votre nom est obligatoire.'); return }
+  if (!email.trim() || !email.includes('@')) { setErreur('Email invalide.'); return }
+  if (!consent) { setErreur('Veuillez accepter les conditions.'); return }
+  setErreur('')
+  setLoading(true)
+
+  const pct = Math.round((score / total) * 100)
+
+  // Déterminer le niveau
+  let niveau = 'Débutant'
+  if (pct >= 90) niveau = 'Expert'
+  else if (pct >= 75) niveau = 'Excellent'
+  else if (pct >= 60) niveau = 'Bien'
+  else if (pct >= 40) niveau = 'Passable'
+
+  const tagBrevo = `Quiz-${niveau}-${categorie}`
+
+  // ✅ ÉTAPE 1 — Sauvegarder dans Supabase EN PREMIER
+  // (fonctionne en local ET en production)
+  try {
+    await store.addProspect({
+      nom: nom.trim(),
+      email: email.trim().toLowerCase(),
+      telephone: telephone.trim(),
+      entreprise: entreprise.trim(),
+      categorie,
+      score,
+      total,
+      pourcentage: pct,
+      niveau,
+      tag_brevo: tagBrevo,
+      reponses: reponses,
+      statut: 'Nouveau',
+    })
+    console.log('✅ Prospect sauvegardé dans Supabase')
+  } catch (err) {
+    console.error('❌ Erreur Supabase:', err.message)
+  }
+
+  // ✅ ÉTAPE 2 — Envoyer les emails via Brevo
+  // (fonctionne uniquement sur Netlify, pas en local — c'est normal)
+  try {
+    const res = await fetch('/.netlify/functions/brevo-quiz', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nom: nom.trim(),
+        email: email.trim().toLowerCase(),
+        telephone: telephone.trim(),
+        entreprise: entreprise.trim(),
+        categorie,
+        score,
+        total,
+        reponses,
+      })
+    })
+    const data = await res.json()
+    console.log('✅ Emails Brevo envoyés:', data)
+  } catch (err) {
+    // Normal en local — la fonction Netlify n'existe pas en local
+    console.log('ℹ️ Email Brevo ignoré (normal en local):', err.message)
+  }
+
+  // ✅ ÉTAPE 3 — Toujours afficher les résultats
+  setLoading(false)
+  onSoumis({ nom: nom.trim(), email: email.trim() })
+}
+  return (
+    <div className="min-h-screen pt-20 pb-8 px-4 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #065280 0%, #0A69AD 60%, #065280 100%)' }}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.03)_1px,_transparent_1px)] bg-[length:20px_20px]" />
+
+      <div className="relative max-w-md mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl overflow-hidden shadow-2xl"
+        >
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#C9A227] to-[#b8932a] p-6 text-center">
+            <div className="text-4xl mb-3">🎯</div>
+            <h2 className="text-[#065280] font-black text-xl mb-2">
+              Votre résultat est prêt !
+            </h2>
+            <p className="text-[#065280]/80 text-sm">
+              Entrez vos informations pour recevoir votre analyse personnalisée par email.
+            </p>
+          </div>
+
+          {/* Formulaire */}
+          <form onSubmit={soumettre} className="p-6 space-y-4">
+
+            <div>
+              <label className="text-white/80 text-xs font-bold block mb-1.5">Nom et prénom *</label>
+              <input
+                value={nom} onChange={e => setNom(e.target.value)}
+                placeholder="Ex: Jean Dupont"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/80 text-xs font-bold block mb-1.5">Adresse email *</label>
+              <input
+                type="email"
+                value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="votre@email.com"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/80 text-xs font-bold block mb-1.5">Téléphone (WhatsApp)</label>
+              <input
+                value={telephone} onChange={e => setTelephone(e.target.value)}
+                placeholder="+237 6XX XX XX XX"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="text-white/80 text-xs font-bold block mb-1.5">Entreprise (optionnel)</label>
+              <input
+                value={entreprise} onChange={e => setEntreprise(e.target.value)}
+                placeholder="Nom de votre entreprise"
+                className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
+              />
+            </div>
+
+            {/* Consentement */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="consent"
+                checked={consent}
+                onChange={e => setConsent(e.target.checked)}
+                className="mt-1 w-4 h-4 accent-[#C9A227] shrink-0"
+              />
+              <label htmlFor="consent" className="text-white/60 text-xs cursor-pointer leading-relaxed">
+                J'accepte que BK Success Consulting utilise mes informations pour m'envoyer mon résultat et me contacter. Données confidentielles.
+              </label>
+            </div>
+
+            {erreur && (
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl px-4 py-3 text-red-300 text-xs">
+                {erreur}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-[#C9A227] hover:bg-[#b8932a] disabled:opacity-60 text-[#065280] font-black py-4 rounded-xl flex items-center justify-center gap-2 transition-all text-sm shadow-xl"
+            >
+              {loading ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-[#065280] border-t-transparent rounded-full animate-spin" />
+                  Envoi en cours…
+                </>
+              ) : (
+                <>🎁 Recevoir mon résultat par email</>
+              )}
+            </button>
+
+            <p className="text-white/40 text-[10px] text-center">
+              📧 Votre analyse personnalisée sera envoyée immédiatement à votre adresse email
+            </p>
+          </form>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
 
 // ============ ÉCRAN RÉSULTATS ============
 function EcranResultats({ reponses, categorie, onRecommencer, onChoisirAutre }) {
@@ -408,7 +594,7 @@ function EcranResultats({ reponses, categorie, onRecommencer, onChoisirAutre }) 
   }
 
   const partager = () => {
-    const msg = `🧠 Quiz BKSC — ${categorie?.titre}\n✅ Score : ${score}/${total} (${pct}%)\n${badge.emoji} ${badge.label}\n\n📚 Boostez vos compétences avec BK Success Consulting !\n📞 +237 657 37 89 27\n🌐 bk-success-consulting.netlify.app/quiz`
+    const msg = `🧠 Quiz BKSC — ${categorie?.titre}\n✅ Score : ${score}/${total} (${pct}%)\n${badge.emoji} ${badge.label}\n\n📚 Boostez vos compétences avec BK Success Consulting !\n📞 +237 657 37 89 27\n🌐 bks-conseil.com/quiz`
     window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank')
   }
 
@@ -561,21 +747,55 @@ export default function Quiz() {
   const [reponsesFin, setReponsesFin] = useState([])
   const [categorieFin, setCategorieFin] = useState(null)
 
+  const scoreFinal = reponsesFin.filter(
+    r => r.choisie === r.question?.reponse
+  ).length
+
   return (
     <>
-      {etape === 'accueil' && <EcranAccueil onCommencer={id => { setCategorieId(id); setEtape('quiz') }} />}
+      {etape === 'accueil' && (
+        <EcranAccueil
+          onCommencer={id => {
+            setCategorieId(id)
+            setEtape('quiz')
+          }}
+        />
+      )}
+
       {etape === 'quiz' && categorieId && (
         <EcranQuiz
           categorieId={categorieId}
-          onTerminer={(r, c) => { setReponsesFin(r); setCategorieFin(c); setEtape('resultats') }}
+          onTerminer={(reponses, cat) => {
+            setReponsesFin(reponses)
+            setCategorieFin(cat)
+            setEtape('formulaire')  // ← ICI le formulaire
+          }}
         />
       )}
+
+      {etape === 'formulaire' && (
+        <FormulaireProspect
+          categorie={categorieFin?.titre || ''}
+          score={scoreFinal}
+          total={reponsesFin.length}
+          reponses={reponsesFin}
+          onSoumis={() => {
+            setEtape('resultats')
+          }}
+        />
+      )}
+
       {etape === 'resultats' && (
         <EcranResultats
           reponses={reponsesFin}
           categorie={categorieFin}
-          onRecommencer={() => setEtape('quiz')}
-          onChoisirAutre={() => { setCategorieId(null); setEtape('accueil') }}
+          onRecommencer={() => {
+            setEtape('quiz')
+          }}
+          onChoisirAutre={() => {
+            setCategorieId(null)
+            setEtape('accueil')
+          }}
         />
       )}
     </>

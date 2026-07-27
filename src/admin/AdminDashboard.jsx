@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import {
   LayoutDashboard, Briefcase, GraduationCap, Users, Quote, Image,
   Megaphone, Inbox, LogOut, Plus, Pencil, Trash2, Menu, X, User,
-  Settings, Camera, CheckCircle2, TrendingUp, Star, FileText,
+  Settings, Camera, CheckCircle2, TrendingUp, Star, FileText,Mail,
 } from 'lucide-react'
 import { store } from '../data/contentStore'
 import { clearAdminSession } from './AdminGuard'
@@ -43,6 +43,7 @@ const menu = [
   { id: 'annonces', label: 'Annonces & Statuts', icon: Megaphone },
   { id: 'blog', label: 'Blog & Actualités', icon: FileText },
   { id: 'services', label: 'Services', icon: Briefcase },
+  { id: 'abonnes', label: 'Abonnés Newsletter', icon: Mail },
   { id: 'formations', label: 'Formations', icon: GraduationCap },
   { id: 'equipe', label: 'Équipe & Photos', icon: Users },
   { id: 'temoignages', label: 'Témoignages', icon: Quote },
@@ -50,6 +51,7 @@ const menu = [
   { id: 'galerie_videos', label: 'Vidéos Cabinet', icon: Image },
   { id: 'quiz_admin', label: 'Quiz Questions', icon: Star },
   { id: 'medias', label: 'Vidéo Hero', icon: Image },
+  { id: 'prospects', label: 'Prospects Quiz', icon: TrendingUp },
   { id: 'parametres', label: 'Paramètres', icon: Settings },
   { id: 'messages', label: 'Messages', icon: Inbox },
 ]
@@ -161,6 +163,106 @@ function SectionListe({ titre, description, champs, getter, setter }) {
         {items.length === 0 && (
           <div className="bg-[#F4F6F8] rounded-2xl p-8 text-center">
             <p className="text-gray-400 text-sm">Aucun élément. Cliquez sur "Ajouter" pour commencer.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function SectionAbonnes() {
+  const [abonnes, setAbonnes] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [recherche, setRecherche] = useState('')
+
+  const charger = async () => {
+    setChargement(true)
+    const data = await store.getAbonnes()
+    setAbonnes(data); setChargement(false)
+  }
+
+  useEffect(() => { charger() }, [])
+
+  const supprimer = async (id) => {
+    if (!confirm('Supprimer cet abonné ?')) return
+    await store.deleteAbonne(id); charger()
+  }
+
+  const filtres = abonnes.filter(a =>
+    a.email.toLowerCase().includes(recherche.toLowerCase()) ||
+    (a.nom || '').toLowerCase().includes(recherche.toLowerCase())
+  )
+
+  if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
+
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-black text-[#065280]">Abonnés Newsletter</h2>
+          <p className="text-xs text-gray-500">{abonnes.length} abonné(s) au total</p>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 gap-3 mb-5">
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 text-center">
+          <p className="text-3xl font-black text-[#065280]">{abonnes.length}</p>
+          <p className="text-xs text-gray-400 font-semibold">Total abonnés</p>
+        </div>
+        <div className="bg-white border border-gray-100 rounded-2xl p-4 text-center">
+          <p className="text-3xl font-black text-[#C9A227]">
+            {abonnes.filter(a => {
+              const d = new Date(a.created_at)
+              const now = new Date()
+              return d.getMonth() === now.getMonth()
+            }).length}
+          </p>
+          <p className="text-xs text-gray-400 font-semibold">Ce mois-ci</p>
+        </div>
+      </div>
+
+      {/* Recherche */}
+      <div className="relative mb-4">
+        <Mail className="absolute left-3 top-2.5 text-gray-400" size={16} />
+        <input
+          value={recherche}
+          onChange={e => setRecherche(e.target.value)}
+          placeholder="Rechercher un email ou un nom..."
+          className="w-full border border-gray-200 rounded-xl pl-9 pr-4 py-2.5 text-sm outline-none focus:border-[#0A69AD] bg-white"
+        />
+      </div>
+
+      {/* Liste abonnés */}
+      <div className="space-y-2">
+        {filtres.map((abonne) => (
+          <div key={abonne.id} className="bg-white border border-gray-100 rounded-xl p-3.5 flex items-center gap-3">
+            <div className="w-9 h-9 rounded-full bg-[#0A69AD] flex items-center justify-center shrink-0">
+              <span className="text-white font-black text-sm">
+                {(abonne.nom || abonne.email)[0].toUpperCase()}
+              </span>
+            </div>
+            <div className="flex-1 min-w-0">
+              {abonne.nom && <p className="font-bold text-[#065280] text-sm">{abonne.nom}</p>}
+              <p className="text-gray-500 text-xs">{abonne.email}</p>
+              <p className="text-gray-400 text-[10px] mt-0.5">
+                Inscrit le {new Date(abonne.created_at).toLocaleDateString('fr-FR')}
+              </p>
+            </div>
+            <button
+              onClick={() => supprimer(abonne.id)}
+              className="text-red-400 p-1.5 hover:bg-red-50 rounded-lg transition-colors shrink-0"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+        {filtres.length === 0 && (
+          <div className="bg-[#F4F6F8] rounded-2xl p-10 text-center">
+            <Mail className="text-gray-300 mx-auto mb-2" size={32} />
+            <p className="text-gray-400 text-sm">
+              {recherche ? 'Aucun résultat pour cette recherche.' : 'Aucun abonné pour le moment.'}
+            </p>
           </div>
         )}
       </div>
@@ -863,7 +965,7 @@ function SectionParametres() {
             {champ('telephonePrincipal', 'Téléphone principal', '+237 6XX XX XX XX')}
             {champ('telephoneSecondaire', 'Téléphone secondaire', '+237 6XX XX XX XX')}
             {champ('whatsapp', 'WhatsApp (sans +)', '237657378927')}
-            {champ('email', 'Email', 'bksuccessconsulting@gmail.com')}
+            {champ('email', 'Email', 'contact@bks-conseil.com')}
             <div className="md:col-span-2">{champ('adresse', 'Adresse', 'Ndogbong Citadelle, Douala...')}</div>
           </div>
         </div>
@@ -1531,6 +1633,219 @@ function SectionQuizAdmin() {
     </div>
   )
 }
+function SectionProspects() {
+  const [prospects, setProspects] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [recherche, setRecherche] = useState('')
+  const [filtreNiveau, setFiltreNiveau] = useState('Tous')
+  const [filtreStatut, setFiltreStatut] = useState('Tous')
+  const [ficheOuverte, setFicheOuverte] = useState(null)
+
+  const STATUTS = ['Nouveau', 'Contacté', 'Rendez-vous pris', 'Client', 'Pas intéressé']
+  const NIVEAUX = ['Tous', 'Expert', 'Excellent', 'Bien', 'Passable', 'Débutant']
+
+  const charger = async () => {
+    setChargement(true)
+    const data = await store.getProspects()
+    setProspects(data)
+    setChargement(false)
+  }
+
+  useEffect(() => { charger() }, [])
+
+  const changerStatut = async (id, statut) => {
+    await store.updateProspectStatut(id, statut)
+    setProspects(prev => prev.map(p => p.id === id ? { ...p, statut } : p))
+  }
+
+  const supprimer = async (id) => {
+    if (!confirm('Supprimer ce prospect ?')) return
+    await store.deleteProspect(id)
+    setProspects(prev => prev.filter(p => p.id !== id))
+    setFicheOuverte(null)
+  }
+
+  const filtres = prospects.filter(p => {
+    const matchRecherche = (p.nom || '').toLowerCase().includes(recherche.toLowerCase()) ||
+      (p.email || '').toLowerCase().includes(recherche.toLowerCase())
+    const matchNiveau = filtreNiveau === 'Tous' || p.niveau === filtreNiveau
+    const matchStatut = filtreStatut === 'Tous' || p.statut === filtreStatut
+    return matchRecherche && matchNiveau && matchStatut
+  })
+
+  const couleurStatut = (s) => {
+    if (s === 'Nouveau') return 'bg-blue-100 text-blue-700'
+    if (s === 'Contacté') return 'bg-yellow-100 text-yellow-700'
+    if (s === 'Rendez-vous pris') return 'bg-purple-100 text-purple-700'
+    if (s === 'Client') return 'bg-green-100 text-green-700'
+    return 'bg-gray-100 text-gray-600'
+  }
+
+  const couleurNiveau = (n) => {
+    if (n === 'Expert') return 'bg-yellow-100 text-yellow-700'
+    if (n === 'Excellent') return 'bg-green-100 text-green-700'
+    if (n === 'Bien') return 'bg-blue-100 text-blue-700'
+    if (n === 'Passable') return 'bg-orange-100 text-orange-700'
+    return 'bg-red-100 text-red-700'
+  }
+
+  if (chargement) return <div className="p-8 text-gray-400 text-sm">Chargement…</div>
+
+  // Fiche prospect ouverte
+  if (ficheOuverte) {
+    const p = ficheOuverte
+    const reponses = Array.isArray(p.reponses) ? p.reponses : []
+    return (
+      <div className="p-4 md:p-6">
+        <div className="flex items-center gap-3 mb-5">
+          <button onClick={() => setFicheOuverte(null)} className="text-[#0A69AD] font-bold text-sm hover:underline">← Retour</button>
+          <h2 className="text-lg font-black text-[#065280]">Fiche prospect — {p.nom}</h2>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
+            <h3 className="font-black text-[#065280] text-sm mb-3">👤 Informations</h3>
+            <div className="space-y-2 text-sm">
+              <div className="flex gap-2"><span className="text-gray-400 w-24 shrink-0">Nom :</span><span className="font-bold text-[#065280]">{p.nom}</span></div>
+              <div className="flex gap-2"><span className="text-gray-400 w-24 shrink-0">Email :</span><a href={`mailto:${p.email}`} className="text-[#0A69AD] font-bold">{p.email}</a></div>
+              <div className="flex gap-2"><span className="text-gray-400 w-24 shrink-0">Téléphone :</span><a href={`tel:${p.telephone}`} className="font-bold text-[#065280]">{p.telephone || '—'}</a></div>
+              <div className="flex gap-2"><span className="text-gray-400 w-24 shrink-0">Entreprise :</span><span className="font-bold text-[#065280]">{p.entreprise || '—'}</span></div>
+              <div className="flex gap-2"><span className="text-gray-400 w-24 shrink-0">Date :</span><span className="font-bold text-[#065280]">{new Date(p.created_at).toLocaleDateString('fr-FR')}</span></div>
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-2xl p-5">
+            <h3 className="font-black text-[#065280] text-sm mb-3">📊 Résultat Quiz</h3>
+            <div className="text-center mb-3">
+              <div className="text-3xl font-black text-[#C9A227]">{p.pourcentage}%</div>
+              <span className={`text-xs font-bold px-3 py-1 rounded-full ${couleurNiveau(p.niveau)}`}>{p.niveau}</span>
+            </div>
+            <div className="bg-[#F4F6F8] rounded-xl h-3 mb-2">
+              <div className="bg-[#C9A227] h-3 rounded-xl" style={{ width: `${p.pourcentage}%` }} />
+            </div>
+            <p className="text-xs text-gray-400 text-center">{p.score}/{p.total} bonnes réponses · {p.categorie}</p>
+
+            <div className="mt-4">
+              <label className="text-xs font-bold text-gray-500 block mb-1.5">Statut</label>
+              <select value={p.statut} onChange={e => { changerStatut(p.id, e.target.value); setFicheOuverte({ ...p, statut: e.target.value }) }}
+                className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+                {STATUTS.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Réponses quiz */}
+        {reponses.length > 0 && (
+          <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4">
+            <h3 className="font-black text-[#065280] text-sm mb-3">📋 Réponses au quiz</h3>
+            <div className="space-y-2">
+              {reponses.map((r, i) => {
+                const correct = r.choisie === r.question?.reponse
+                return (
+                  <div key={i} className={`flex items-start gap-3 p-3 rounded-xl text-xs ${correct ? 'bg-green-50' : 'bg-red-50'}`}>
+                    <span className={correct ? 'text-green-500' : 'text-red-500'}>{correct ? '✅' : '❌'}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-700 truncate">{r.question?.question}</p>
+                      <p className="text-gray-500 mt-0.5">Réponse : {r.question?.options?.[r.choisie] || 'Sans réponse'}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex flex-wrap gap-2">
+          <a href={`https://wa.me/${(p.telephone || '').replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer"
+            className="bg-[#25D366] text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2">
+            💬 WhatsApp
+          </a>
+          <a href={`mailto:${p.email}?subject=Suite à votre quiz BKSC`}
+            className="bg-[#065280] text-white font-bold px-4 py-2.5 rounded-xl text-sm flex items-center gap-2">
+            ✉️ Email
+          </a>
+          <button onClick={() => supprimer(p.id)} className="text-red-500 font-bold px-4 py-2.5 rounded-xl text-sm border border-red-200 hover:bg-red-50">
+            Supprimer
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Liste prospects
+  return (
+    <div className="p-4 md:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-lg font-black text-[#065280]">Prospects Quiz</h2>
+          <p className="text-xs text-gray-500">{prospects.length} prospect(s) total · {prospects.filter(p => p.statut === 'Nouveau').length} nouveau(x)</p>
+        </div>
+      </div>
+
+      {/* Stats rapides */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+        {[
+          { label: 'Total', val: prospects.length, color: 'text-[#065280]' },
+          { label: 'Nouveaux', val: prospects.filter(p => p.statut === 'Nouveau').length, color: 'text-blue-600' },
+          { label: 'Clients', val: prospects.filter(p => p.statut === 'Client').length, color: 'text-green-600' },
+          { label: 'Ce mois', val: prospects.filter(p => new Date(p.created_at).getMonth() === new Date().getMonth()).length, color: 'text-[#C9A227]' },
+        ].map(s => (
+          <div key={s.label} className="bg-white border border-gray-100 rounded-2xl p-4 text-center">
+            <p className={`text-2xl font-black ${s.color}`}>{s.val}</p>
+            <p className="text-gray-400 text-xs font-semibold mt-0.5">{s.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Filtres */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <input value={recherche} onChange={e => setRecherche(e.target.value)}
+          placeholder="Rechercher nom ou email..."
+          className="flex-1 min-w-[180px] border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white" />
+        <select value={filtreNiveau} onChange={e => setFiltreNiveau(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+          {NIVEAUX.map(n => <option key={n} value={n}>{n === 'Tous' ? 'Tous les niveaux' : n}</option>)}
+        </select>
+        <select value={filtreStatut} onChange={e => setFiltreStatut(e.target.value)}
+          className="border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-[#0A69AD] bg-white">
+          <option value="Tous">Tous les statuts</option>
+          {STATUTS.map(s => <option key={s} value={s}>{s}</option>)}
+        </select>
+      </div>
+
+      {/* Liste */}
+      <div className="space-y-2">
+        {filtres.map(p => (
+          <div key={p.id} onClick={() => setFicheOuverte(p)}
+            className="bg-white border border-gray-100 rounded-xl p-4 flex items-center gap-3 hover:border-[#0A69AD]/30 cursor-pointer transition-colors">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#065280] to-[#0A69AD] flex items-center justify-center shrink-0 text-white font-black text-sm">
+              {(p.nom || '?')[0].toUpperCase()}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="font-black text-[#065280] text-sm">{p.nom}</p>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${couleurNiveau(p.niveau)}`}>{p.niveau}</span>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${couleurStatut(p.statut)}`}>{p.statut}</span>
+              </div>
+              <p className="text-gray-400 text-xs">{p.email} · {p.categorie} · {p.pourcentage}%</p>
+              <p className="text-gray-300 text-[10px]">{new Date(p.created_at).toLocaleDateString('fr-FR')}</p>
+            </div>
+            <div className="text-gray-300 shrink-0">›</div>
+          </div>
+        ))}
+        {filtres.length === 0 && (
+          <div className="bg-[#F4F6F8] rounded-2xl p-10 text-center">
+            <p className="text-3xl mb-2">🎯</p>
+            <p className="text-gray-400 text-sm">Aucun prospect pour le moment.</p>
+            <p className="text-gray-400 text-xs mt-1">Les visiteurs qui complètent le quiz apparaîtront ici.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 // ============================================
 // DASHBOARD PRINCIPAL
 // ============================================
@@ -1702,6 +2017,8 @@ export default function AdminDashboard() {
         )}
 
         {actif === 'annonces' && <SectionAnnonces />}
+        {actif === 'prospects' && <SectionProspects />}
+        {actif === 'abonnes' && <SectionAbonnes />}
         {actif === 'blog' && <SectionBlog />}
         {actif === 'services' && (
           <SectionListe titre="Services" description="Gérez les 6 services affichés sur le site" getter={store.getServices} setter={store.setServices}

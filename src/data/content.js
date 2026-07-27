@@ -19,7 +19,7 @@ export const cabinetInfo = {
   telephonePrincipal: "+237 657 37 89 27",
   telephoneSecondaire: "+237 673 40 92 31",
   whatsapp: "237657378927",
-  email: "bksuccessconsulting@gmail.com",
+  email: "contact@bks-conseil.com",
   horaires: {
     semaine: "08h00 – 12h30  et  13h30 – 17h00",
     samedi: "08h00 – 13h00",

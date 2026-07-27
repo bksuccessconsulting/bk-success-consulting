@@ -234,7 +234,7 @@ export const questions = {
       question: 'Qu\'est-ce que l\'IGS (Impôt sur le Revenu des Gros Salaires) ?',
       options: [
         'Un impôt sur les sociétés étrangères',
-        'Un impôt additionnel sur les salaires dépassant un certain seuil',
+        'un impot generale synthétique',
         'Une taxe sur les grosses transactions',
         'Un impôt sur les grands propriétaires',
       ],

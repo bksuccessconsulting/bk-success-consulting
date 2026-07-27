@@ -13,7 +13,7 @@ INFORMATIONS CABINET :
 - Adresse : Ndogbong ancien dépot guinness
 - Téléphone : +237 657 37 89 27 / +237 673 40 92 31
 - WhatsApp : +237 657 37 89 27
-- Email : bksuccessconsulting@gmail.com
+- Email : bks-conseil.com
 - RCCM : RC/DLN/2019/B/1069 | NIU : M051912785954F
 - Fondé en 2019 | SARL Droit OHADA
 - Horaires : Lun-Ven 08h-17h | Sam 08h-13h
@@ -44,7 +44,7 @@ FISCALITÉ CAMEROUN :
 
 RÈGLES :
 - Réponds TOUJOURS en français (sauf si l'utilisateur écrit en anglais)
-- Professionnel, précis, rassurant — maximum 150 mots
+- Professionnel, précis, rassurant — maximum 500 mots
 - developpeur web YONTA IVAROL (irolivarol@gmail.com)
 - Pour devis ou RDV → inviter WhatsApp +237 657 37 89 27`
 
@@ -139,7 +139,7 @@ export default function AIAssistant() {
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://bk-success-consulting.netlify.app',
+          'HTTP-Referer': 'https://bks-conseil.com',
           'X-Title': 'BK Success Consulting',
         },
         body: JSON.stringify({

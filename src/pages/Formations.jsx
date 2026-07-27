@@ -124,6 +124,34 @@ export default function Formations() {
             )
           })}
         </div>
+        {/* Statistiques formations */}
+<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-12 max-w-4xl mx-auto">
+  <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+    <p className="text-4xl font-black text-[#C9A227] mb-1">100+</p>
+    <p className="text-[#065280] font-bold text-sm">Personnes formées</p>
+  </div>
+  <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+    <p className="text-4xl font-black text-[#C9A227] mb-1">4</p>
+    <p className="text-[#065280] font-bold text-sm">Modules certifiants</p>
+  </div>
+  <div className="bg-white rounded-2xl p-6 text-center border border-gray-100 shadow-sm">
+    <p className="text-4xl font-black text-[#C9A227] mb-1">✅</p>
+    <p className="text-[#065280] font-bold text-sm">Assistance post-formation</p>
+  </div>
+</div>
+
+{/* Assistance post-formation */}
+<div className="bg-gradient-to-r from-[#065280] to-[#0A69AD] rounded-2xl p-6 mb-12 max-w-4xl mx-auto text-center">
+  <h3 className="text-white font-black text-lg mb-2">
+    🤝 Accompagnement après la formation
+  </h3>
+  <p className="text-gray-200 text-sm leading-relaxed">
+    BK Success Consulting ne s'arrête pas à la formation. Nous accompagnons 
+    nos apprenants dans leur insertion professionnelle — conseils d'emploi, 
+    mise en relation avec des employeurs partenaires et assistance dans les 
+    premiers mois de prise de poste.
+  </p>
+</div>
       </section>
     </div>
   )

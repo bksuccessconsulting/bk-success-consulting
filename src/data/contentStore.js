@@ -163,4 +163,80 @@ setGalerieVideos: (v) => ecrire('bksc_galerie_videos', v),
       return true
     } catch (e) { console.error('Suppression article:', e.message); return false }
   },
+  // ============ ABONNÉS NEWSLETTER ============
+getAbonnes: async () => {
+  try {
+    const { data, error } = await supabase
+      .from('abonnes').select('*').order('created_at', { ascending: false })
+    if (error) throw error
+    return data || []
+  } catch (e) { console.warn('Abonnés:', e.message); return [] }
+},
+
+addAbonne: async (email, nom = '') => {
+  try {
+    const { data, error } = await supabase
+      .from('abonnes').insert([{ email, nom }]).select()
+    if (error) {
+      if (error.code === '23505') return { succes: false, message: 'Cet email est déjà abonné.' }
+      throw error
+    }
+    return { succes: true, message: 'Abonnement confirmé !' }
+  } catch (e) {
+    console.error('Abonnement:', e.message)
+    return { succes: false, message: 'Erreur. Réessayez.' }
+  }
+},
+
+deleteAbonne: async (id) => {
+  try {
+    const { error } = await supabase.from('abonnes').delete().eq('id', id)
+    if (error) throw error
+    return true
+  } catch (e) { return false }
+},
+// ============ PROSPECTS QUIZ ============
+getProspects: async () => {
+  try {
+    const { data, error } = await supabase
+      .from('prospects_quiz')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return data || []
+  } catch (e) { console.warn('Prospects:', e.message); return [] }
+},
+
+addProspect: async (prospect) => {
+  try {
+    const { data, error } = await supabase
+      .from('prospects_quiz')
+      .insert([prospect])
+      .select()
+    if (error) throw error
+    return data[0]
+  } catch (e) { console.error('Ajout prospect:', e.message); return null }
+},
+
+updateProspectStatut: async (id, statut) => {
+  try {
+    const { error } = await supabase
+      .from('prospects_quiz')
+      .update({ statut })
+      .eq('id', id)
+    if (error) throw error
+    return true
+  } catch (e) { return false }
+},
+
+deleteProspect: async (id) => {
+  try {
+    const { error } = await supabase
+      .from('prospects_quiz')
+      .delete()
+      .eq('id', id)
+    if (error) throw error
+    return true
+  } catch (e) { return false }
+},
 }
