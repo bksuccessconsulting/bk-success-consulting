@@ -6,12 +6,13 @@ import {
   Calculator, FileText, Users, Scale, Search, Lightbulb,
   ArrowRight, CheckCircle2, GraduationCap, Quote,
   Award, BookOpen, Lock, Headphones, Clock, Star,
-  ChevronLeft, ChevronRight, Sparkles,
-  TrendingUp, Shield, Globe,
+  ChevronLeft, ChevronRight,
+  Shield, Globe,
 } from 'lucide-react'
 import { cabinetInfo, stats, valeurs } from '../data/content'
 import { store } from '../data/contentStore'
 import heroVideoLocal from '../assets/hero.mp4'
+import Lightbox from '../components/Lightbox'
 
 const iconMap = { Calculator, FileText, Users, Scale, Search, Lightbulb }
 
@@ -134,6 +135,17 @@ export default function Home() {
   const [temoignages, setTemoignages] = useState([])
   const [galerie, setGalerie] = useState([])
   const [heroVideoUrl, setHeroVideoUrl] = useState(heroVideoLocal)
+  const [lightbox, setLightbox] = useState({ images: [], index: null })
+  const [galerieEtendue, setGalerieEtendue] = useState(false)
+
+  const ouvrirLightbox = (images, index) => setLightbox({ images, index })
+  const fermerLightbox = () => setLightbox({ images: [], index: null })
+  const naviguerLightbox = (delta) => {
+    setLightbox((lb) => ({
+      ...lb,
+      index: (lb.index + delta + lb.images.length) % lb.images.length,
+    }))
+  }
 
   useEffect(() => {
     let actif = true
@@ -218,7 +230,7 @@ export default function Home() {
 
             <motion.div
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
-              className="flex flex-wrap gap-3 mb-10"
+              className="flex flex-wrap gap-3"
             >
               <Link to="/contact"
                 className="group relative bg-[#C9A227] hover:bg-[#b8932a] text-[#065280] font-black px-7 py-3.5 rounded-xl flex items-center gap-2 transition-all text-sm shadow-2xl hover:scale-105 overflow-hidden"
@@ -233,32 +245,6 @@ export default function Home() {
                 <Globe size={15} />
                 Découvrir nos services
               </Link>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.7 }}
-              className="flex flex-wrap gap-3"
-            >
-              {[
-                { icon: TrendingUp, label: '+100 clients accompagnés' },
-                { icon: Shield, label: 'RCCM · NIU certifiés' },
-                { icon: BookOpen, label: '4 formations certifiantes' },
-                { icon: Sparkles, label: 'IA comptable intégrée' },
-              ].map((item, i) => {
-                const Icon = item.icon
-                return (
-                  <motion.div
-                    key={item.label}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.8 + i * 0.08 }}
-                    className="flex items-center gap-2 bg-white/8 backdrop-blur-sm border border-white/15 rounded-full px-3.5 py-1.5"
-                  >
-                    <Icon size={11} className="text-[#C9A227]" />
-                    <span className="text-white/70 text-xs font-semibold">{item.label}</span>
-                  </motion.div>
-                )
-              })}
             </motion.div>
           </div>
         </div>
@@ -537,11 +523,12 @@ export default function Home() {
               <h2 className="text-3xl font-black text-[#065280] mt-2">Galerie</h2>
             </motion.div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {galerie.slice(0, 8).map((item, i) => (
+              {(galerieEtendue ? galerie : galerie.slice(0, 8)).map((item, i) => (
                 <motion.div
                   key={item.id || i}
                   initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.04 }}
                   whileHover={{ scale: 1.03 }}
+                  onClick={() => ouvrirLightbox(galerie.map(g => g.url), i)}
                   className="relative group overflow-hidden rounded-2xl aspect-square bg-gray-100 cursor-pointer"
                 >
                   <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
@@ -551,6 +538,16 @@ export default function Home() {
                 </motion.div>
               ))}
             </div>
+            {galerie.length > 8 && (
+              <div className="text-center mt-8">
+                <button
+                  onClick={() => setGalerieEtendue(v => !v)}
+                  className="text-[#0A69AD] font-bold text-sm hover:text-[#065280] transition-colors underline underline-offset-4"
+                >
+                  {galerieEtendue ? 'Voir moins de photos' : `Voir toutes les photos (${galerie.length})`}
+                </button>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -590,6 +587,12 @@ export default function Home() {
         </div>
       </section>
 
+      <Lightbox
+        images={lightbox.images}
+        index={lightbox.index}
+        onClose={fermerLightbox}
+        onNav={naviguerLightbox}
+      />
     </div>
   )
 }

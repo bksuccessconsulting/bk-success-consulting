@@ -2,11 +2,83 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Loader2, Sparkles, User, Globe, ChevronRight, MessageCircle } from 'lucide-react'
 import { cabinetInfo } from '../data/content'
+import { store } from '../data/contentStore'
 
 // ✅ Même URL que ton code qui marche
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
 
-const SYSTEM_PROMPT = `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, cabinet comptable et de conseil basé à Douala, Cameroun.
+// Base du prompt : identité + règles strictes.
+// AUCUN taux/chiffre fiscal n'est écrit en dur ici — l'IA doit s'appuyer
+// uniquement sur le "contexte cabinet" injecté dynamiquement (voir buildSystemPrompt).
+const REGLES_STRICTES = `RÈGLES ABSOLUES — À RESPECTER SANS EXCEPTION :
+
+1. Tu réponds UNIQUEMENT à partir des informations fournies dans la section
+   "CONTEXTE CABINET" ci-dessous (services, formations, articles publiés,
+   coordonnées). Tu n'inventes JAMAIS une information qui n'y figure pas.
+
+2. INTERDICTION FORMELLE DE FAIRE DES CALCULS :
+   Tu ne dois JAMAIS calculer un salaire net, une retenue, une cotisation
+   CNPS, un montant de TVA, d'IRPP, d'IS ou tout autre montant chiffré,
+   même si on te donne un montant de départ (ex: "calcule la retenue sur
+   100 000 FCFA"). Les taux fiscaux et sociaux camerounais changent et
+   varient selon les cas ; donner un chiffre faux serait dangereux pour
+   l'utilisateur. Réponds à la place que ce calcul nécessite une analyse
+   personnalisée par un expert du cabinet, et invite au contact WhatsApp.
+
+3. Si une question sort du cadre du cabinet (sujet non couvert par le
+   CONTEXTE CABINET, actualité générale, autre pays, question personnelle,
+   etc.), dis clairement que tu ne peux pas répondre à cette question et
+   invite la personne à contacter le cabinet directement.
+
+4. Ne donne jamais de taux, pourcentage ou barème précis de mémoire. Si un
+   taux n'est pas explicitement dans le CONTEXTE CABINET, dis que tu ne
+   l'as pas et redirige vers un expert.
+
+5. Réponds TOUJOURS en français (sauf si l'utilisateur écrit en anglais).
+6. Ton professionnel, précis, rassurant — maximum 1000 mots.
+7. Pour devis, RDV, calcul personnalisé ou question hors-sujet → toujours
+   inviter à contacter WhatsApp +237 657 37 89 27.
+8. developpeur web : YONTA IVAROL (irolivarol@gmail.com)`
+
+// Construit le prompt système à partir des vraies données du cabinet
+// stockées dans Supabase (services, formations, articles de blog publiés).
+// C'est ce "contexte" qui remplace les chiffres fiscaux en dur.
+async function buildSystemPrompt() {
+  let services = []
+  let formations = []
+  let articles = []
+
+  try {
+    const [s, f, a] = await Promise.all([
+      store.getServices(),
+      store.getFormations(),
+      store.getBlogArticles(true), // uniquement les articles publiés
+    ])
+    services = s || []
+    formations = f || []
+    articles = a || []
+  } catch (e) {
+    console.warn('Contexte IA: impossible de charger Supabase', e.message)
+  }
+
+  const blocServices = services.length
+    ? services.map(s => `- ${s.titre}${s.accroche ? ' : ' + s.accroche : ''}`).join('\n')
+    : 'Non renseigné.'
+
+  const blocFormations = formations.length
+    ? formations.map(f => {
+        const tarifs = Array.isArray(f.tarifs)
+          ? f.tarifs.map(t => `${t.segment} ${t.prix}`).join(', ')
+          : ''
+        return `- ${f.titre}${f.accroche ? ' : ' + f.accroche : ''}${f.duree ? ' (' + f.duree + ')' : ''}${tarifs ? ' — Tarifs : ' + tarifs : ''}`
+      }).join('\n')
+    : 'Non renseigné.'
+
+  const blocArticles = articles.length
+    ? articles.slice(0, 15).map(a => `--- Article : "${a.titre}" (${a.categorie || 'actualité'}) ---\n${(a.contenu || a.extrait || '').slice(0, 1200)}`).join('\n\n')
+    : 'Aucun article disponible pour le moment.'
+
+  return `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, cabinet comptable et de conseil basé à Douala, Cameroun.
 
 INFORMATIONS CABINET :
 - Nom : BK SUCCESS CONSULTING SARL
@@ -18,35 +90,19 @@ INFORMATIONS CABINET :
 - Fondé en 2019 | SARL Droit OHADA
 - Horaires : Lun-Ven 08h-17h | Sam 08h-13h
 
+CONTEXTE CABINET (seule source d'information autorisée pour répondre) :
+
 SERVICES :
-1. Comptabilité SYSCOHADA révisé (états financiers, bilan, rapprochement)
-2. Fiscalité & Déclarations (TVA 19,25%, IS, DSF, patentes, DGI)
-3. Social & Paie (CNPS, bulletins salaire, DIPE, IRPP)
-4. Juridique & Structuration (création entreprise CFCE, statuts OHADA)
-5. Audit & Contrôle de gestion (tableaux de bord, KPIs, analyse financière)
-6. Conseil en gestion (budget, optimisation fiscale, business plan)
+${blocServices}
 
-FORMATIONS CERTIFIANTES (3 mois / 240h | Attestation BKSC avec mention) :
-- Module 1 : Comptabilité Pratique OHADA → dès 110 000 FCFA
-- Module 2 : Fiscalité PME & DSF Pratique → dès 110 000 FCFA
-- Module 3 : Création Entreprise/CNPS/Paie → dès 110 000 FCFA
-- Module 4 : Audit Interne & Outils Numériques → dès 110 000 FCFA
-Tarifs : Étudiants 110 000 | Salariés 150 000 | Chefs entreprise 200 000 FCFA
+FORMATIONS :
+${blocFormations}
 
-FISCALITÉ CAMEROUN :
-- TVA : 19,25% — déclaration mensuelle portail DGI
-- IS : acomptes mensuels, taux standard 33%
-- DSF : Déclaration Statistique et Fiscale annuelle (CF1, CF2, annexes)
-- CNPS : cotisation employeur 16,2% + salarié 4,2% du salaire brut
-- IRPP : retenu à la source sur salaires
-- Patente : impôt professionnel annuel
-- SARL : capital minimum 1 000 000 FCFA, dossier CFCE
+ARTICLES PUBLIÉS (actualités, textes de loi, conseils rédigés par le cabinet) :
+${blocArticles}
 
-RÈGLES :
-- Réponds TOUJOURS en français (sauf si l'utilisateur écrit en anglais)
-- Professionnel, précis, rassurant — maximum 500 mots
-- developpeur web YONTA IVAROL (irolivarol@gmail.com)
-- Pour devis ou RDV → inviter WhatsApp +237 657 37 89 27`
+${REGLES_STRICTES}`
+}
 
 const SUGGESTIONS = [
   { emoji: '📊', label: 'TVA au Cameroun', question: 'Comment fonctionne la TVA au Cameroun ?' },
@@ -134,6 +190,8 @@ export default function AIAssistant() {
         throw new Error('Clé OpenRouter manquante.')
       }
 
+      const systemPrompt = await buildSystemPrompt()
+
       const res = await fetch(OPENROUTER_URL, {
         method: 'POST',
         headers: {
@@ -147,11 +205,11 @@ export default function AIAssistant() {
           messages: [
             {
               role: 'system',
-              content: SYSTEM_PROMPT + (langue === 'en' ? '\n\nRespond in English.' : '')
+              content: systemPrompt + (langue === 'en' ? '\n\nRespond in English.' : '')
             },
             ...newMessages.map(m => ({ role: m.role, content: m.content }))
           ],
-          temperature: 0.7,
+          temperature: 0.3,
           max_tokens: 400,
         })
       })

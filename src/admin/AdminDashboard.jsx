@@ -1157,8 +1157,9 @@ function SectionBlog() {
     { value: 'actualites', label: '📰 Actualités' },
   ]
 
-  const vide = { titre: '', extrait: '', contenu: '', image_url: '', categorie: 'actualites', publie: false }
+  const vide = { titre: '', extrait: '', contenu: '', image_url: '', images: [], categorie: 'actualites', publie: false }
   const [brouillon, setBrouillon] = useState(vide)
+  const [uploadingGalerie, setUploadingGalerie] = useState(false)
 
   const charger = async () => {
     setChargement(true)
@@ -1173,6 +1174,20 @@ function SectionBlog() {
     try { const url = await uploadCloudinary(fichier, 'image'); setBrouillon(b => ({ ...b, image_url: url })) }
     catch (err) { alert('Erreur: ' + err.message) }
     setUploading(false)
+  }
+
+  const handleGalerieUpload = async (e) => {
+    const fichiers = Array.from(e.target.files || []); if (!fichiers.length) return
+    setUploadingGalerie(true)
+    try {
+      const urls = await Promise.all(fichiers.map(f => uploadCloudinary(f, 'image')))
+      setBrouillon(b => ({ ...b, images: [...(b.images || []), ...urls] }))
+    } catch (err) { alert('Erreur: ' + err.message) }
+    setUploadingGalerie(false)
+  }
+
+  const supprimerImageGalerie = (idx) => {
+    setBrouillon(b => ({ ...b, images: (b.images || []).filter((_, i) => i !== idx) }))
   }
 
   const sauvegarder = async () => {
@@ -1255,6 +1270,26 @@ function SectionBlog() {
               </label>
             )}
           </div>
+          <div>
+            <label className="text-xs font-semibold text-gray-500 block mb-2">
+              Galerie (photos supplémentaires — visibles en cliquant sur l'image)
+            </label>
+            {(brouillon.images || []).length > 0 && (
+              <div className="flex gap-2 flex-wrap mb-2">
+                {brouillon.images.map((img, idx) => (
+                  <div key={idx} className="relative w-20 h-20">
+                    <img src={img} alt="" className="w-full h-full object-cover rounded-lg" />
+                    <button onClick={() => supprimerImageGalerie(idx)}
+                      className="absolute -top-1.5 -right-1.5 bg-black/60 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px]">✕</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <label className={`flex items-center justify-center gap-2 h-16 border-2 border-dashed rounded-xl cursor-pointer bg-white transition-colors ${uploadingGalerie ? 'border-[#0A69AD] bg-blue-50' : 'border-gray-300 hover:border-[#0A69AD]'}`}>
+              <input type="file" accept="image/*" multiple onChange={handleGalerieUpload} disabled={uploadingGalerie} className="hidden" />
+              <span className="text-sm text-gray-500">{uploadingGalerie ? '⏳ Upload en cours…' : '🖼️ Ajouter une ou plusieurs photos'}</span>
+            </label>
+          </div>
           <div className="flex gap-3 pt-2">
             <button onClick={sauvegarder} disabled={!brouillon.titre}
               className="bg-[#C9A227] text-[#065280] font-black px-6 py-2.5 rounded-xl text-sm disabled:opacity-50 hover:bg-[#b8932a] transition-colors">
@@ -1308,7 +1343,7 @@ function SectionBlog() {
                 </div>
                 <div className="flex flex-col gap-1.5 shrink-0">
                   <button
-                    onClick={() => { setBrouillon({ titre: article.titre, extrait: article.extrait || '', contenu: article.contenu || '', image_url: article.image_url || '', categorie: article.categorie || 'actualites', publie: article.publie }); setEdition(article) }}
+                    onClick={() => { setBrouillon({ titre: article.titre, extrait: article.extrait || '', contenu: article.contenu || '', image_url: article.image_url || '', images: article.images || [], categorie: article.categorie || 'actualites', publie: article.publie }); setEdition(article) }}
                     className="text-[#0A69AD] text-xs font-bold px-3 py-1.5 rounded-xl hover:bg-[#F4F6F8] flex items-center gap-1">
                     <Pencil size={12} /> Modifier
                   </button>

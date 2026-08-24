@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronDown, Calendar, ArrowRight } from 'lucide-react'
 import { store } from '../data/contentStore'
 import { cabinetInfo } from '../data/content'
+import Lightbox from '../components/Lightbox'
 
 const CATEGORIES = [
   { value: 'all', label: 'Tous les articles' },
@@ -18,6 +19,16 @@ export default function Blog() {
   const [chargement, setChargement] = useState(true)
   const [categActive, setCategActive] = useState('all')
   const [articleOuvert, setArticleOuvert] = useState(null)
+  const [lightbox, setLightbox] = useState({ images: [], index: null })
+
+  const ouvrirLightbox = (images, index) => setLightbox({ images, index })
+  const fermerLightbox = () => setLightbox({ images: [], index: null })
+  const naviguerLightbox = (delta) => {
+    setLightbox((lb) => ({
+      ...lb,
+      index: (lb.index + delta + lb.images.length) % lb.images.length,
+    }))
+  }
 
   useEffect(() => {
     let actif = true
@@ -135,6 +146,12 @@ export default function Blog() {
               {articlesFiltres.map((article, i) => {
                 const estOuvert = articleOuvert === article.id
 
+                // Toutes les images de l'article : couverture + galerie éventuelle
+                const toutesLesImages = [
+                  article.image_url,
+                  ...(Array.isArray(article.images) ? article.images : []),
+                ].filter(Boolean)
+
                 const dateFormat = new Date(
                   article.created_at
                 ).toLocaleDateString('fr-FR', {
@@ -152,14 +169,22 @@ export default function Blog() {
                     transition={{ delay: i * 0.05 }}
                     className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 border border-gray-100 flex flex-col group"
                   >
-                    {/* IMAGE */}
+                    {/* IMAGE — object-contain pour ne jamais couper l'image, quel que soit son format */}
                     {article.image_url ? (
-                      <div className="overflow-hidden h-48">
+                      <div
+                        onClick={() => ouvrirLightbox(toutesLesImages, 0)}
+                        className="relative overflow-hidden h-48 bg-[#F4F6F8] cursor-pointer"
+                      >
                         <img
                           src={article.image_url}
                           alt={article.titre}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                          className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                         />
+                        {toutesLesImages.length > 1 && (
+                          <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] font-bold px-2 py-1 rounded-full">
+                            +{toutesLesImages.length - 1} photo{toutesLesImages.length > 2 ? 's' : ''}
+                          </span>
+                        )}
                       </div>
                     ) : (
                       <div className="h-2 bg-gradient-to-r from-[#0A69AD] to-[#C9A227]" />
@@ -229,6 +254,20 @@ export default function Blog() {
                             {article.contenu}
                           </p>
 
+                          {toutesLesImages.length > 1 && (
+                            <div className="flex gap-2 flex-wrap mt-4">
+                              {toutesLesImages.map((img, idx) => (
+                                <button
+                                  key={idx}
+                                  onClick={() => ouvrirLightbox(toutesLesImages, idx)}
+                                  className="w-16 h-16 rounded-lg overflow-hidden bg-[#F4F6F8] border border-gray-100 hover:border-[#0A69AD] transition-colors"
+                                >
+                                  <img src={img} alt="" className="w-full h-full object-cover" />
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
                           <a
                             href={`https://wa.me/${
                               cabinetInfo.whatsapp
@@ -288,6 +327,13 @@ export default function Blog() {
           </a>
         </div>
       </section>
+
+      <Lightbox
+        images={lightbox.images}
+        index={lightbox.index}
+        onClose={fermerLightbox}
+        onNav={naviguerLightbox}
+      />
     </div>
   )
 }
