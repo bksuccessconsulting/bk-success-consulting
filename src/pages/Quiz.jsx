@@ -493,7 +493,7 @@ function FormulaireProspect({ onSoumis, categorie, score, total, reponses }) {
               <label className="text-white/80 text-xs font-bold block mb-1.5">Nom et prénom *</label>
               <input
                 value={nom} onChange={e => setNom(e.target.value)}
-                placeholder="Ex: Jean Dupont"
+                placeholder="Ex: ivarol yonta"
                 className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
               />
             </div>
