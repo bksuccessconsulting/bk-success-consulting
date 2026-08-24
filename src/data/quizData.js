@@ -174,12 +174,12 @@ export const questions = {
       question: 'Qu\'est-ce que la patente au Cameroun ?',
       options: [
         'Un brevet d\'invention',
-        'Un impôt professionnel annuel sur l\'activité économique',
+        'Un impôt annuel dû pour exercer une activité professionnelle',
         'Une taxe sur les importations',
         'Un droit de douane',
       ],
       reponse: 1,
-      explication: 'La patente est un impôt professionnel annuel dû par toute personne physique ou morale qui exerce une activité commerciale ou industrielle au Cameroun.',
+      explication: 'La patente est un impôt professionnel annuel dû par toute personne physique ou morale qui exerce une activité commerciale ou industrielle au Cameroun.art C8-C24 DU CGI',
     },
     {
       id: 6,
@@ -234,12 +234,12 @@ export const questions = {
       question: 'Qu\'est-ce que l\'IGS (Impôt sur le Revenu des Gros Salaires) ?',
       options: [
         'Un impôt sur les sociétés étrangères',
-        'un impot generale synthétique',
+        'un impot generale synthétique destiné aux petites entreprises',
         'Une taxe sur les grosses transactions',
         'Un impôt sur les grands propriétaires',
       ],
       reponse: 1,
-      explication: 'L\'IGS est un impôt camerounais applicable aux salaires dépassant un certain seuil, en complément de l\'IRPP.',
+      explication: 'L\'IGS est un impôt camerounais applicable aux salaires dépassant un certain seuil, en complément de l\'IRPP.art C38 du CGI',
     },
   ],
 
@@ -247,9 +247,9 @@ export const questions = {
     {
       id: 1,
       question: 'Quel est le capital social minimum pour créer une SARL au Cameroun ?',
-      options: ['500 000 FCFA', '1 000 000 FCFA', '2 000 000 FCFA', '5 000 000 FCFA'],
+      options: ['500 000 FCFA', '100 000 FCFA', '2 000 000 FCFA', '5 000 000 FCFA'],
       reponse: 1,
-      explication: 'Le capital minimum d\'une SARL au Cameroun est de 1 000 000 FCFA selon l\'Acte Uniforme OHADA révisé.',
+      explication: 'Le capital minimum d\'une SARL au Cameroun est de 100 000 FCFA selon l\'Acte Uniforme OHADA révisé. La référence officielle est la loi camerounaise n°2016/014 du 14 décembre 2016 : elle fixe le capital social minimum de la SARL à 100 000 FCFA',
     },
     {
       id: 2,
@@ -350,9 +350,9 @@ export const questions = {
     {
       id: 1,
       question: 'Quel est le taux de cotisation CNPS pour l\'employeur au Cameroun ?',
-      options: ['8,4%', '12,6%', '16,2%', '18%'],
+      options: ['8,4%', '12,6%', '12.95%', '18%'],
       reponse: 2,
-      explication: 'L\'employeur cotise à hauteur de 16,2% du salaire brut à la CNPS (vieillesse + accidents du travail + prestations familiales).',
+      explication: 'L\'employeur cotise à hauteur de 12.95% du salaire cotisable à la CNPS (vieillesse(4.2%) + accidents du travail, risque faible (1.75%) + prestations familiales, regime reglementaire (7%)).',
     },
     {
       id: 2,
