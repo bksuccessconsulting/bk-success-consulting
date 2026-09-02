@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import confetti from 'canvas-confetti'
 import {
   Trophy, CheckCircle2, XCircle, ArrowRight,
   RotateCcw, Home, BookOpen, Share2, Zap,
@@ -11,6 +12,52 @@ import { store } from '../data/contentStore'
 import { cabinetInfo } from '../data/content'
 
 const TEMPS = 30
+
+// Célébration confettis à la fin du quiz — intensité selon le score,
+// pour un effet "app mobile" gratifiant sans être exagéré sur les
+// scores faibles.
+function celebrer(pct) {
+  const couleurs = ['#C9A227', '#0A69AD', '#065280', '#ffffff']
+
+  if (pct >= 90) {
+    // Score Expert : grande célébration, tir des deux côtés + rafale dorée
+    const duree = 2200
+    const fin = Date.now() + duree
+    ;(function tir() {
+      confetti({
+        particleCount: 4,
+        angle: 60,
+        spread: 65,
+        origin: { x: 0, y: 0.7 },
+        colors: couleurs,
+      })
+      confetti({
+        particleCount: 4,
+        angle: 120,
+        spread: 65,
+        origin: { x: 1, y: 0.7 },
+        colors: couleurs,
+      })
+      if (Date.now() < fin) requestAnimationFrame(tir)
+    })()
+    confetti({
+      particleCount: 120,
+      spread: 100,
+      origin: { y: 0.5 },
+      colors: couleurs,
+      startVelocity: 45,
+    })
+  } else if (pct >= 60) {
+    // Bon score : une belle salve, plus discrète
+    confetti({
+      particleCount: 70,
+      spread: 80,
+      origin: { y: 0.5 },
+      colors: couleurs,
+    })
+  }
+  // Sous 60% : pas de confettis, on garde le ton motivant sans "célébrer" un échec
+}
 
 // ============ TIMER CIRCULAIRE SVG ============
 function TimerCircle({ temps, tempsMax }) {
@@ -577,6 +624,10 @@ function EcranResultats({ reponses, categorie, onRecommencer, onChoisirAutre }) 
   const total = reponses.length
   const pct = Math.round((score / total) * 100)
   const badge = Badge({ score, total })
+
+  useEffect(() => {
+    celebrer(pct)
+  }, [])
 
   const messages = {
     90: 'Niveau expert ! Vous maîtrisez parfaitement ce sujet.',

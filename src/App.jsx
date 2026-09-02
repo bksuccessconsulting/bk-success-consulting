@@ -7,6 +7,7 @@ import WhatsAppButton from './components/WhatsAppButton'
 import AnnoncesBanner from './components/AnnoncesBanner'
 import Loader from './components/Loader'
 import AIAssistant from './components/AIAssistant'
+import CookieConsent from './components/CookieConsent'
 import Home from './pages/Home'
 import About from './pages/About'
 import Services from './pages/Services'
@@ -26,6 +27,7 @@ function PublicLayout({ children }) {
       <Footer />
       <WhatsAppButton />
       <AIAssistant />
+      <CookieConsent />
     </>
   )
 }

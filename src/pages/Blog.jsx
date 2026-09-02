@@ -14,12 +14,137 @@ const CATEGORIES = [
   { value: 'actualites', label: '📰 Actualités' },
 ]
 
+// Un commentaire individuel — badge doré "Réponse du cabinet" pour
+// distinguer visuellement les réponses de l'équipe des visiteurs.
+function CommentaireItem({ c }) {
+  const date = new Date(c.created_at)
+  const dateFmt = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  const heureFmt = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+
+  return (
+    <div className={`rounded-xl p-3 text-xs ${c.est_reponse_equipe ? 'bg-[#065280]/5 border border-[#065280]/15' : 'bg-gray-50'}`}>
+      <div className="flex items-center gap-2 mb-1 flex-wrap">
+        <span className="font-bold text-gray-700">
+          {c.site_web ? (
+            <a href={c.site_web} target="_blank" rel="noopener noreferrer nofollow" className="hover:underline">{c.nom}</a>
+          ) : c.nom}
+        </span>
+        {c.est_reponse_equipe && (
+          <span className="bg-[#C9A227] text-[#065280] text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase tracking-wide">
+            Réponse du cabinet
+          </span>
+        )}
+        <span className="text-gray-400">· {dateFmt} à {heureFmt}</span>
+      </div>
+      <p className="text-gray-600 leading-relaxed">{c.message}</p>
+    </div>
+  )
+}
+
+// Liste des commentaires d'un article + formulaire (nom, email, site web).
+// Les commentaires visiteurs passent par une modération admin avant
+// d'être publiés ; les réponses de l'équipe sont ajoutées depuis l'admin.
+function SectionCommentaires({ articleId, commentaires }) {
+  const [form, setForm] = useState({ nom: '', email: '', site_web: '', message: '' })
+  const [envoi, setEnvoi] = useState(false)
+  const [envoye, setEnvoye] = useState(false)
+
+  const soumettre = async (e) => {
+    e.preventDefault()
+    if (!form.nom.trim() || !form.email.trim() || !form.message.trim()) return
+    setEnvoi(true)
+    const res = await store.addCommentaire({
+      article_id: articleId,
+      parent_id: null,
+      nom: form.nom.trim(),
+      email: form.email.trim(),
+      site_web: form.site_web.trim() || null,
+      message: form.message.trim(),
+    })
+    setEnvoi(false)
+    if (res) {
+      setEnvoye(true)
+      setForm({ nom: '', email: '', site_web: '', message: '' })
+    }
+  }
+
+  const principaux = commentaires.filter(c => !c.parent_id)
+  const reponsesDe = (id) => commentaires.filter(c => c.parent_id === id)
+
+  return (
+    <div className="mt-6 pt-5 border-t border-gray-100">
+      <h4 className="font-black text-[#065280] text-sm mb-4">
+        Commentaires {commentaires.length > 0 && `(${commentaires.length})`}
+      </h4>
+
+      <div className="space-y-4 mb-6">
+        {principaux.length === 0 && (
+          <p className="text-xs text-gray-400 italic">Soyez le premier à commenter cet article.</p>
+        )}
+        {principaux.map((c) => (
+          <div key={c.id}>
+            <CommentaireItem c={c} />
+            {reponsesDe(c.id).map((r) => (
+              <div key={r.id} className="ml-6 mt-2">
+                <CommentaireItem c={r} />
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {envoye ? (
+        <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-xl p-3">
+          Merci ! Votre commentaire a été envoyé et sera visible après validation par le cabinet.
+        </div>
+      ) : (
+        <form onSubmit={soumettre} className="space-y-2" onClick={(e) => e.stopPropagation()}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input
+              type="text" placeholder="Nom *" required
+              value={form.nom} onChange={(e) => setForm(f => ({ ...f, nom: e.target.value }))}
+              className="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0A69AD]"
+            />
+            <input
+              type="email" placeholder="Email *" required
+              value={form.email} onChange={(e) => setForm(f => ({ ...f, email: e.target.value }))}
+              className="text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0A69AD]"
+            />
+          </div>
+          <input
+            type="url" placeholder="Site web (optionnel)"
+            value={form.site_web} onChange={(e) => setForm(f => ({ ...f, site_web: e.target.value }))}
+            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0A69AD]"
+          />
+          <textarea
+            placeholder="Votre commentaire *" required rows={3}
+            value={form.message} onChange={(e) => setForm(f => ({ ...f, message: e.target.value }))}
+            className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0A69AD] resize-none"
+          />
+          <button
+            type="submit" disabled={envoi}
+            className="bg-[#065280] hover:bg-[#0A69AD] text-white font-bold text-xs px-4 py-2 rounded-lg transition-colors disabled:opacity-50"
+          >
+            {envoi ? 'Envoi...' : 'Publier mon commentaire'}
+          </button>
+        </form>
+      )}
+    </div>
+  )
+}
+
 export default function Blog() {
   const [articles, setArticles] = useState([])
   const [chargement, setChargement] = useState(true)
   const [categActive, setCategActive] = useState('all')
   const [articleOuvert, setArticleOuvert] = useState(null)
   const [lightbox, setLightbox] = useState({ images: [], index: null })
+  const [commentaires, setCommentaires] = useState({}) // { [articleId]: [...] }
+
+  const chargerCommentaires = async (articleId) => {
+    const data = await store.getCommentaires(articleId, true)
+    setCommentaires(c => ({ ...c, [articleId]: data }))
+  }
 
   const ouvrirLightbox = (images, index) => setLightbox({ images, index })
   const fermerLightbox = () => setLightbox({ images: [], index: null })
@@ -39,6 +164,9 @@ export default function Blog() {
         setChargement(false)
       }
     })
+
+    // Nettoyage silencieux des commentaires de plus de 2 ans, en arrière-plan
+    store.nettoyerVieuxCommentaires()
 
     return () => {
       actif = false
@@ -218,11 +346,13 @@ export default function Blog() {
                       {/* BOUTON */}
                       {article.contenu && (
                         <button
-                          onClick={() =>
-                            setArticleOuvert(
-                              estOuvert ? null : article.id
-                            )
-                          }
+                          onClick={() => {
+                            const nouvelId = estOuvert ? null : article.id
+                            setArticleOuvert(nouvelId)
+                            if (nouvelId && !commentaires[nouvelId]) {
+                              chargerCommentaires(nouvelId)
+                            }
+                          }}
                           className="flex items-center justify-between text-[#0A69AD] font-bold text-sm py-3 border-t border-gray-100 hover:text-[#065280] transition-colors mt-auto"
                         >
                           <span>
@@ -282,6 +412,11 @@ export default function Blog() {
 
                             <ArrowRight size={13} />
                           </a>
+
+                          <SectionCommentaires
+                            articleId={article.id}
+                            commentaires={commentaires[article.id] || []}
+                          />
                         </div>
                       </motion.div>
                     )}

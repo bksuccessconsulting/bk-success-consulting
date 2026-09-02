@@ -239,4 +239,103 @@ deleteProspect: async (id) => {
     return true
   } catch (e) { return false }
 },
+
+// ============================================
+// COMMENTAIRES BLOG
+// ============================================
+
+// Récupère les commentaires d'un article. publiesUniquement=true pour
+// le site public (n'affiche que les commentaires validés par l'admin).
+getCommentaires: async (articleId, publiesUniquement = true) => {
+  try {
+    let requete = supabase
+      .from('blog_commentaires')
+      .select('*')
+      .eq('article_id', articleId)
+      .order('created_at', { ascending: true })
+    if (publiesUniquement) requete = requete.eq('statut', 'publie')
+    const { data, error } = await requete
+    if (error) throw error
+    return data || []
+  } catch (e) { console.error('Chargement commentaires:', e.message); return [] }
+},
+
+// Tous les commentaires, toutes catégories, pour la modération admin
+getTousCommentaires: async () => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_commentaires')
+      .select('*')
+      .order('created_at', { ascending: false })
+    if (error) throw error
+    return data || []
+  } catch (e) { console.error('Chargement commentaires admin:', e.message); return [] }
+},
+
+addCommentaire: async (commentaire) => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_commentaires')
+      .insert([{ ...commentaire, statut: 'en_attente', est_reponse_equipe: false }])
+      .select()
+    if (error) throw error
+    return data[0]
+  } catch (e) { console.error('Ajout commentaire:', e.message); return null }
+},
+
+// Réponse postée depuis l'admin, marquée visuellement "cabinet"
+repondreCommentaire: async (articleId, parentId, message) => {
+  try {
+    const { data, error } = await supabase
+      .from('blog_commentaires')
+      .insert([{
+        article_id: articleId,
+        parent_id: parentId,
+        nom: 'BK Success Consulting',
+        message,
+        statut: 'publie',
+        est_reponse_equipe: true,
+      }])
+      .select()
+    if (error) throw error
+    return data[0]
+  } catch (e) { console.error('Réponse commentaire:', e.message); return null }
+},
+
+updateCommentaireStatut: async (id, statut) => {
+  try {
+    const { error } = await supabase
+      .from('blog_commentaires')
+      .update({ statut })
+      .eq('id', id)
+    if (error) throw error
+    return true
+  } catch (e) { return false }
+},
+
+deleteCommentaire: async (id) => {
+  try {
+    const { error } = await supabase
+      .from('blog_commentaires')
+      .delete()
+      .eq('id', id)
+    if (error) throw error
+    return true
+  } catch (e) { return false }
+},
+
+// Nettoyage automatique : supprime les commentaires de plus de 2 ans.
+// Se déclenche silencieusement quand un visiteur charge le blog —
+// Supabase (plan gratuit) n'a pas de tâche planifiée native, donc ce
+// nettoyage s'appuie sur le trafic naturel du site.
+nettoyerVieuxCommentaires: async () => {
+  try {
+    const deuxAnsAvant = new Date()
+    deuxAnsAvant.setFullYear(deuxAnsAvant.getFullYear() - 2)
+    await supabase
+      .from('blog_commentaires')
+      .delete()
+      .lt('created_at', deuxAnsAvant.toISOString())
+  } catch (e) { /* silencieux : ne doit jamais bloquer l'affichage du site */ }
+},
 }

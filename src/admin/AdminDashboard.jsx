@@ -4,6 +4,7 @@ import {
   LayoutDashboard, Briefcase, GraduationCap, Users, Quote, Image,
   Megaphone, Inbox, LogOut, Plus, Pencil, Trash2, Menu, X, User,
   Settings, Camera, CheckCircle2, TrendingUp, Star, FileText,Mail,
+  MessageSquare, Send,
 } from 'lucide-react'
 import { store } from '../data/contentStore'
 import { clearAdminSession } from './AdminGuard'
@@ -52,6 +53,7 @@ const menu = [
   { id: 'quiz_admin', label: 'Quiz Questions', icon: Star },
   { id: 'medias', label: 'Vidéo Hero', icon: Image },
   { id: 'prospects', label: 'Prospects Quiz', icon: TrendingUp },
+  { id: 'commentaires', label: 'Commentaires', icon: MessageSquare },
   { id: 'parametres', label: 'Paramètres', icon: Settings },
   { id: 'messages', label: 'Messages', icon: Inbox },
 ]
@@ -1668,6 +1670,176 @@ function SectionQuizAdmin() {
     </div>
   )
 }
+
+// ============================================
+// COMMENTAIRES BLOG — Modération
+// ============================================
+function SectionCommentairesAdmin() {
+  const [commentaires, setCommentaires] = useState([])
+  const [chargement, setChargement] = useState(true)
+  const [filtre, setFiltre] = useState('en_attente')
+  const [reponseOuverte, setReponseOuverte] = useState(null)
+  const [texteReponse, setTexteReponse] = useState('')
+  const [envoiReponse, setEnvoiReponse] = useState(false)
+
+  const charger = async () => {
+    setChargement(true)
+    const data = await store.getTousCommentaires()
+    setCommentaires(data)
+    setChargement(false)
+  }
+
+  useEffect(() => { charger() }, [])
+
+  const valider = async (id) => {
+    await store.updateCommentaireStatut(id, 'publie')
+    setCommentaires(prev => prev.map(c => c.id === id ? { ...c, statut: 'publie' } : c))
+  }
+
+  const refuser = async (id) => {
+    await store.updateCommentaireStatut(id, 'refuse')
+    setCommentaires(prev => prev.map(c => c.id === id ? { ...c, statut: 'refuse' } : c))
+  }
+
+  const supprimer = async (id) => {
+    if (!confirm('Supprimer ce commentaire définitivement ?')) return
+    await store.deleteCommentaire(id)
+    setCommentaires(prev => prev.filter(c => c.id !== id))
+  }
+
+  const envoyerReponse = async (commentaire) => {
+    if (!texteReponse.trim()) return
+    setEnvoiReponse(true)
+    const rep = await store.repondreCommentaire(commentaire.article_id, commentaire.id, texteReponse.trim())
+    setEnvoiReponse(false)
+    if (rep) {
+      setCommentaires(prev => [...prev, rep])
+      setTexteReponse('')
+      setReponseOuverte(null)
+    }
+  }
+
+  const filtres = commentaires.filter(c => {
+    if (filtre === 'Tous') return true
+    return c.statut === filtre
+  }).filter(c => !c.est_reponse_equipe || filtre === 'Tous' || filtre === 'publie')
+
+  const nbEnAttente = commentaires.filter(c => c.statut === 'en_attente').length
+
+  if (chargement) return <div className="p-8 text-center text-gray-400">Chargement…</div>
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-5">
+        <div>
+          <h2 className="text-xl font-black text-[#065280]">Commentaires du blog</h2>
+          <p className="text-xs text-gray-500 mt-1">
+            {nbEnAttente > 0 ? `${nbEnAttente} en attente de validation` : 'Tout est à jour'}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex gap-2 mb-5 flex-wrap">
+        {[
+          { id: 'en_attente', label: 'En attente' },
+          { id: 'publie', label: 'Publiés' },
+          { id: 'refuse', label: 'Refusés' },
+          { id: 'Tous', label: 'Tous' },
+        ].map(f => (
+          <button
+            key={f.id}
+            onClick={() => setFiltre(f.id)}
+            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-colors ${
+              filtre === f.id ? 'bg-[#065280] text-white' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {filtres.length === 0 ? (
+        <div className="text-center py-16 text-gray-400 text-sm">Aucun commentaire dans cette catégorie.</div>
+      ) : (
+        <div className="space-y-3">
+          {filtres.map((c) => (
+            <div key={c.id} className={`bg-white border rounded-2xl p-4 ${c.est_reponse_equipe ? 'border-[#C9A227]/40 bg-[#C9A227]/5' : 'border-gray-100'}`}>
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-bold text-sm text-[#065280]">{c.nom}</span>
+                    {c.est_reponse_equipe && (
+                      <span className="bg-[#C9A227] text-[#065280] text-[9px] font-black px-1.5 py-0.5 rounded-full uppercase">
+                        Réponse cabinet
+                      </span>
+                    )}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      c.statut === 'publie' ? 'bg-green-100 text-green-700' :
+                      c.statut === 'refuse' ? 'bg-red-100 text-red-600' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {c.statut === 'publie' ? 'Publié' : c.statut === 'refuse' ? 'Refusé' : 'En attente'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-0.5">
+                    {c.email} {c.site_web && `· ${c.site_web}`} · {new Date(c.created_at).toLocaleString('fr-FR')}
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm text-gray-600 mb-3">{c.message}</p>
+
+              <div className="flex flex-wrap gap-2">
+                {c.statut !== 'publie' && (
+                  <button onClick={() => valider(c.id)}
+                    className="flex items-center gap-1 text-xs font-bold text-green-700 bg-green-50 hover:bg-green-100 px-3 py-1.5 rounded-lg transition-colors">
+                    <CheckCircle2 size={13} /> Valider
+                  </button>
+                )}
+                {c.statut !== 'refuse' && !c.est_reponse_equipe && (
+                  <button onClick={() => refuser(c.id)}
+                    className="text-xs font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg transition-colors">
+                    Refuser
+                  </button>
+                )}
+                {!c.est_reponse_equipe && (
+                  <button onClick={() => setReponseOuverte(reponseOuverte === c.id ? null : c.id)}
+                    className="flex items-center gap-1 text-xs font-bold text-[#0A69AD] bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
+                    <Send size={13} /> Répondre
+                  </button>
+                )}
+                <button onClick={() => supprimer(c.id)}
+                  className="text-xs font-bold text-red-500 bg-red-50 hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
+                  <Trash2 size={13} /> Supprimer
+                </button>
+              </div>
+
+              {reponseOuverte === c.id && (
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <textarea
+                    value={texteReponse}
+                    onChange={(e) => setTexteReponse(e.target.value)}
+                    placeholder="Votre réponse en tant que cabinet…"
+                    rows={2}
+                    className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:border-[#0A69AD] resize-none mb-2"
+                  />
+                  <button
+                    onClick={() => envoyerReponse(c)}
+                    disabled={envoiReponse}
+                    className="bg-[#C9A227] text-[#065280] font-black text-xs px-4 py-2 rounded-lg disabled:opacity-50"
+                  >
+                    {envoiReponse ? 'Envoi…' : 'Publier la réponse'}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 function SectionProspects() {
   const [prospects, setProspects] = useState([])
   const [chargement, setChargement] = useState(true)
@@ -2053,6 +2225,7 @@ export default function AdminDashboard() {
 
         {actif === 'annonces' && <SectionAnnonces />}
         {actif === 'prospects' && <SectionProspects />}
+        {actif === 'commentaires' && <SectionCommentairesAdmin />}
         {actif === 'abonnes' && <SectionAbonnes />}
         {actif === 'blog' && <SectionBlog />}
         {actif === 'services' && (
