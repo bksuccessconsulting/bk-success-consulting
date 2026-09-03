@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "accueil": "Home",
+    "apropos": "About",
+    "services": "Services",
+    "formations": "Training",
+    "quiz": "Quiz",
+    "blog": "Blog",
+    "contact": "Contact",
+    "devisGratuit": "Free quote"
+  },
+  "hero": {
+    "badge": "OHADA-CERTIFIED FIRM · SINCE {{annee}}",
+    "ctaDevis": "Request a quote",
+    "ctaServices": "Discover our services"
+  }
+}

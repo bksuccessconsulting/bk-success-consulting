@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Target, Eye, User } from 'lucide-react'
 import { cabinetInfo, visionMission, historique, valeurs } from '../data/content'
 import { store } from '../data/contentStore'
+import Seo from '../components/Seo'
 
 export default function About() {
   const [equipe, setEquipe] = useState([])
@@ -17,6 +18,11 @@ export default function About() {
 
   return (
     <div>
+      <Seo
+        titre="À propos du cabinet"
+        description="Découvrez BK Success Consulting SARL : notre histoire depuis 2019, notre vision, nos valeurs et notre équipe d'experts comptables et fiscaux à Douala."
+        chemin="/about"
+      />
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-20 text-center">
         <div className="max-w-3xl mx-auto px-4">
           <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Qui sommes-nous</span>

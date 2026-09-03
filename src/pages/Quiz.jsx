@@ -10,6 +10,7 @@ import {
 import { categories, questions as questionsHardcoded } from '../data/quizData'
 import { store } from '../data/contentStore'
 import { cabinetInfo } from '../data/content'
+import Seo from '../components/Seo'
 
 const TEMPS = 30
 
@@ -540,7 +541,7 @@ function FormulaireProspect({ onSoumis, categorie, score, total, reponses }) {
               <label className="text-white/80 text-xs font-bold block mb-1.5">Nom et prénom *</label>
               <input
                 value={nom} onChange={e => setNom(e.target.value)}
-                placeholder="Ex: ivarol yonta"
+                placeholder="Ex: Jean Dupont"
                 className="w-full bg-white/10 border border-white/20 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#C9A227] transition-colors"
               />
             </div>
@@ -804,6 +805,11 @@ export default function Quiz() {
 
   return (
     <>
+      <Seo
+        titre="Quiz Comptabilité & Fiscalité"
+        description="Testez vos connaissances en comptabilité OHADA, fiscalité camerounaise, création d'entreprise, social et audit avec notre quiz interactif gratuit."
+        chemin="/quiz"
+      />
       {etape === 'accueil' && (
         <EcranAccueil
           onCommencer={id => {

@@ -4,6 +4,7 @@ import { ChevronDown, Calendar, ArrowRight } from 'lucide-react'
 import { store } from '../data/contentStore'
 import { cabinetInfo } from '../data/content'
 import Lightbox from '../components/Lightbox'
+import Seo from '../components/Seo'
 
 const CATEGORIES = [
   { value: 'all', label: 'Tous les articles' },
@@ -183,6 +184,11 @@ export default function Blog() {
 
   return (
     <div>
+      <Seo
+        titre="Blog & Actualités Comptables"
+        description="Actualités fiscales, conseils comptables et informations juridiques pour les entreprises camerounaises, par les experts de BK Success Consulting."
+        chemin="/blog"
+      />
       {/* HERO */}
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-24 text-center relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle,_rgba(255,255,255,0.05)_1px,_transparent_1px)] bg-[length:24px_24px]" />

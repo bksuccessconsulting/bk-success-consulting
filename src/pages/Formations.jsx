@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { GraduationCap, Clock, Users, Award, CreditCard, CheckCircle2, ChevronDown, MessageCircle } from 'lucide-react'
 import { cabinetInfo } from '../data/content'
 import { store } from '../data/contentStore'
+import Seo from '../components/Seo'
 
 export default function Formations() {
   const [formations, setFormations] = useState([])
@@ -21,6 +22,11 @@ export default function Formations() {
 
   return (
     <div>
+      <Seo
+        titre="Formations Certifiantes Comptabilité & Fiscalité"
+        description="4 modules de formation certifiante en comptabilité pratique OHADA, fiscalité PME, création d'entreprise et audit interne. Attestation BK Success Consulting."
+        chemin="/formations"
+      />
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-20 text-center">
         <div className="max-w-3xl mx-auto px-4">
           <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Pôle Formation BKSC</span>

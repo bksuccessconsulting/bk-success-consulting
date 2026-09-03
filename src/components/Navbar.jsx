@@ -1,22 +1,25 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { Menu, X, Phone } from 'lucide-react'
+import { Menu, X, Phone, Globe } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslation } from 'react-i18next'
 import { cabinetInfo } from '../data/content'
+import { changerLangue } from '../i18n/config'
 
 export default function Navbar() {
+  const { t, i18n } = useTranslation()
   const [menuOuvert, setMenuOuvert] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const location = useLocation()
 
   const liens = [
-  { nom: 'Accueil', chemin: '/' },
-  { nom: 'À propos', chemin: '/about' },
-  { nom: 'Services', chemin: '/services' },
-  { nom: 'Formations', chemin: '/formations' },
-  { nom: 'Quiz', chemin: '/quiz' },
-  { nom: 'Blog', chemin: '/blog' },
-  { nom: 'Contact', chemin: '/contact' },
+  { nom: t('nav.accueil'), chemin: '/' },
+  { nom: t('nav.apropos'), chemin: '/about' },
+  { nom: t('nav.services'), chemin: '/services' },
+  { nom: t('nav.formations'), chemin: '/formations' },
+  { nom: t('nav.quiz'), chemin: '/quiz' },
+  { nom: t('nav.blog'), chemin: '/blog' },
+  { nom: t('nav.contact'), chemin: '/contact' },
 ]
 
   useEffect(() => {
@@ -106,6 +109,14 @@ export default function Navbar() {
 
           {/* CTA desktop */}
           <div className="hidden md:flex items-center gap-3">
+            <button
+              onClick={() => changerLangue(i18n.language === 'fr' ? 'en' : 'fr')}
+              className="flex items-center gap-1.5 text-white/85 hover:text-white text-xs font-bold px-3 py-2 rounded-xl hover:bg-white/10 transition-colors"
+              aria-label="Changer de langue"
+            >
+              <Globe size={14} />
+              {i18n.language === 'fr' ? 'EN' : 'FR'}
+            </button>
             <motion.a
               href={`https://wa.me/${cabinetInfo.whatsapp}?text=${encodeURIComponent('Bonjour BK Success Consulting, je souhaite un devis.')}`}
               target="_blank"
@@ -115,7 +126,7 @@ export default function Navbar() {
               className="bg-[#C9A227] hover:bg-[#b8932a] text-[#065280] font-black px-5 py-2.5 rounded-xl text-sm transition-colors flex items-center gap-2 shadow-lg"
             >
               <Phone size={15} />
-              Devis gratuit
+              {t('nav.devisGratuit')}
             </motion.a>
           </div>
 
@@ -171,6 +182,13 @@ export default function Navbar() {
               >
                 Demander un devis gratuit
               </motion.a>
+              <button
+                onClick={() => changerLangue(i18n.language === 'fr' ? 'en' : 'fr')}
+                className="flex items-center justify-center gap-1.5 text-white/80 text-xs font-bold py-2"
+              >
+                <Globe size={13} />
+                {i18n.language === 'fr' ? 'Switch to English' : 'Passer en Français'}
+              </button>
             </div>
           </motion.div>
         )}

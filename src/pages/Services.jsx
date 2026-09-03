@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Calculator, FileText, Users, Scale, Search, Lightbulb, CheckCircle2, ArrowRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { store } from '../data/contentStore'
+import Seo from '../components/Seo'
 
 const iconMap = { Calculator, FileText, Users, Scale, Search, Lightbulb }
 
@@ -17,6 +18,11 @@ export default function Services() {
 
   return (
     <div>
+      <Seo
+        titre="Nos Services Comptables & Fiscaux"
+        description="Comptabilité SYSCOHADA, fiscalité & déclarations, social & paie, juridique, audit et conseil en gestion. Découvrez tous les services de BK Success Consulting à Douala."
+        chemin="/services"
+      />
       <section className="bg-gradient-to-br from-[#065280] to-[#0A69AD] py-20 text-center">
         <div className="max-w-3xl mx-auto px-4">
           <span className="text-[#C9A227] font-bold text-sm tracking-widest uppercase">Ce que nous offrons</span>

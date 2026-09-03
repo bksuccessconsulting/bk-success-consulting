@@ -1,0 +1,17 @@
+{
+  "nav": {
+    "accueil": "Accueil",
+    "apropos": "À propos",
+    "services": "Services",
+    "formations": "Formations",
+    "quiz": "Quiz",
+    "blog": "Blog",
+    "contact": "Contact",
+    "devisGratuit": "Devis gratuit"
+  },
+  "hero": {
+    "badge": "CABINET CERTIFIÉ OHADA · DEPUIS {{annee}}",
+    "ctaDevis": "Demander un devis",
+    "ctaServices": "Découvrir nos services"
+  }
+}

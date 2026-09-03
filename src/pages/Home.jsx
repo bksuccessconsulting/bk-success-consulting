@@ -13,6 +13,8 @@ import { cabinetInfo, stats, valeurs } from '../data/content'
 import { store } from '../data/contentStore'
 import heroVideoLocal from '../assets/hero.mp4'
 import Lightbox from '../components/Lightbox'
+import Seo from '../components/Seo'
+import { useTranslation } from 'react-i18next'
 
 const iconMap = { Calculator, FileText, Users, Scale, Search, Lightbulb }
 
@@ -130,6 +132,7 @@ function TestimonialsCarousel({ temoignages }) {
 
 // ============ HOME PAGE ============
 export default function Home() {
+  const { t } = useTranslation()
   const [services, setServices] = useState([])
   const [formations, setFormations] = useState([])
   const [temoignages, setTemoignages] = useState([])
@@ -176,6 +179,11 @@ export default function Home() {
 
   return (
     <div>
+      <Seo
+        titre="Cabinet Comptable & Fiscal à Douala"
+        description="BK Success Consulting SARL — Cabinet d'expertise comptable, fiscale et juridique à Douala, Cameroun. Comptabilité OHADA, fiscalité PME, audit, formations certifiantes."
+        chemin="/"
+      />
 
       {/* ============ HERO ============ */}
       <section className="relative h-screen flex items-end overflow-hidden bg-[#065280]">
@@ -205,7 +213,7 @@ export default function Home() {
               <div className="flex items-center gap-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2">
                 <Shield size={13} className="text-[#C9A227]" />
                 <span className="text-white/90 text-xs font-bold tracking-wider">
-                  CABINET CERTIFIÉ OHADA · DEPUIS {cabinetInfo.anneeFondation}
+                  {t('hero.badge', { annee: cabinetInfo.anneeFondation })}
                 </span>
               </div>
             </motion.div>
@@ -236,14 +244,14 @@ export default function Home() {
                 className="group relative bg-[#C9A227] hover:bg-[#b8932a] text-[#065280] font-black px-7 py-3.5 rounded-xl flex items-center gap-2 transition-all text-sm shadow-2xl hover:scale-105 overflow-hidden"
               >
                 <span className="absolute inset-0 bg-white/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-500 skew-x-12" />
-                <span className="relative">Demander un devis</span>
+                <span className="relative">{t('hero.ctaDevis')}</span>
                 <ArrowRight size={16} className="relative group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link to="/services"
                 className="group bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/40 backdrop-blur-sm text-white font-bold px-7 py-3.5 rounded-xl flex items-center gap-2 transition-all text-sm hover:scale-105"
               >
                 <Globe size={15} />
-                Découvrir nos services
+                {t('hero.ctaServices')}
               </Link>
             </motion.div>
           </div>
