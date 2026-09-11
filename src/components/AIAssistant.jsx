@@ -2,107 +2,6 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Send, Loader2, Sparkles, User, Globe, ChevronRight, MessageCircle } from 'lucide-react'
 import { cabinetInfo } from '../data/content'
-import { store } from '../data/contentStore'
-
-// ✅ Même URL que ton code qui marche
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions'
-
-// Base du prompt : identité + règles strictes.
-// AUCUN taux/chiffre fiscal n'est écrit en dur ici — l'IA doit s'appuyer
-// uniquement sur le "contexte cabinet" injecté dynamiquement (voir buildSystemPrompt).
-const REGLES_STRICTES = `RÈGLES ABSOLUES — À RESPECTER SANS EXCEPTION :
-
-1. Tu réponds UNIQUEMENT à partir des informations fournies dans la section
-   "CONTEXTE CABINET" ci-dessous (services, formations, articles publiés,
-   coordonnées). Tu n'inventes JAMAIS une information qui n'y figure pas.
-
-2. INTERDICTION FORMELLE DE FAIRE DES CALCULS :
-   Tu ne dois JAMAIS calculer un salaire net, une retenue, une cotisation
-   CNPS, un montant de TVA, d'IRPP, d'IS ou tout autre montant chiffré,
-   même si on te donne un montant de départ (ex: "calcule la retenue sur
-   100 000 FCFA"). Les taux fiscaux et sociaux camerounais changent et
-   varient selon les cas ; donner un chiffre faux serait dangereux pour
-   l'utilisateur. Réponds à la place que ce calcul nécessite une analyse
-   personnalisée par un expert du cabinet, et invite au contact WhatsApp.
-
-3. Si une question sort du cadre du cabinet (sujet non couvert par le
-   CONTEXTE CABINET, actualité générale, autre pays, question personnelle,
-   etc.), dis clairement que tu ne peux pas répondre à cette question et
-   invite la personne à contacter le cabinet directement.
-
-4. Ne donne jamais de taux, pourcentage ou barème précis de mémoire. Si un
-   taux n'est pas explicitement dans le CONTEXTE CABINET, dis que tu ne
-   l'as pas et redirige vers un expert.
-
-5. Réponds TOUJOURS en français (sauf si l'utilisateur écrit en anglais).
-6. Ton professionnel, précis, rassurant — maximum 1000 mots.
-7. Pour devis, RDV, calcul personnalisé ou question hors-sujet → toujours
-   inviter à contacter WhatsApp +237 657 37 89 27.
-8. developpeur web : YONTA IVAROL (irolivarol@gmail.com)`
-
-// Construit le prompt système à partir des vraies données du cabinet
-// stockées dans Supabase (services, formations, articles de blog publiés).
-// C'est ce "contexte" qui remplace les chiffres fiscaux en dur.
-async function buildSystemPrompt() {
-  let services = []
-  let formations = []
-  let articles = []
-
-  try {
-    const [s, f, a] = await Promise.all([
-      store.getServices(),
-      store.getFormations(),
-      store.getBlogArticles(true), // uniquement les articles publiés
-    ])
-    services = s || []
-    formations = f || []
-    articles = a || []
-  } catch (e) {
-    console.warn('Contexte IA: impossible de charger Supabase', e.message)
-  }
-
-  const blocServices = services.length
-    ? services.map(s => `- ${s.titre}${s.accroche ? ' : ' + s.accroche : ''}`).join('\n')
-    : 'Non renseigné.'
-
-  const blocFormations = formations.length
-    ? formations.map(f => {
-        const tarifs = Array.isArray(f.tarifs)
-          ? f.tarifs.map(t => `${t.segment} ${t.prix}`).join(', ')
-          : ''
-        return `- ${f.titre}${f.accroche ? ' : ' + f.accroche : ''}${f.duree ? ' (' + f.duree + ')' : ''}${tarifs ? ' — Tarifs : ' + tarifs : ''}`
-      }).join('\n')
-    : 'Non renseigné.'
-
-  const blocArticles = articles.length
-    ? articles.slice(0, 15).map(a => `--- Article : "${a.titre}" (${a.categorie || 'actualité'}) ---\n${(a.contenu || a.extrait || '').slice(0, 1200)}`).join('\n\n')
-    : 'Aucun article disponible pour le moment.'
-
-  return `Tu es l'assistant IA officiel de BK SUCCESS CONSULTING SARL, cabinet comptable et de conseil basé à Douala, Cameroun.
-
-INFORMATIONS CABINET :
-- Nom : BK SUCCESS CONSULTING SARL
-- Adresse : Ndogbong ancien dépot guinness
-- Téléphone : +237 657 37 89 27 / +237 673 40 92 31
-- WhatsApp : +237 657 37 89 27
-- Email : bks-conseil.com
-- RCCM : RC/DLN/2019/B/1069 | NIU : M051912785954F
-- Fondé en 2019 | SARL Droit OHADA
-- Horaires : Lun-Ven 08h-17h | Sam 08h-13h
-
-CONTEXTE CABINET (seule source d'information autorisée pour répondre) :
-
-SERVICES :
-${blocServices}
-
-FORMATIONS :
-${blocFormations}
-
-ARTICLES PUBLIÉS (actualités, textes de loi, conseils rédigés par le cabinet) :
-${blocArticles}
-
-${REGLES_STRICTES}`
-}
 
 const SUGGESTIONS = [
   { emoji: '📊', label: 'TVA au Cameroun', question: 'Comment fonctionne la TVA au Cameroun ?' },
@@ -184,33 +83,12 @@ export default function AIAssistant() {
     setLoading(true)
 
     try {
-      const apiKey = import.meta.env.VITE_OPENROUTER_API_KEY
-
-      if (!apiKey) {
-        throw new Error('Clé OpenRouter manquante.')
-      }
-
-      const systemPrompt = await buildSystemPrompt()
-
-      const res = await fetch(OPENROUTER_URL, {
+      const res = await fetch('/.netlify/functions/ai-chat', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://bks-conseil.com',
-          'X-Title': 'BK Success Consulting',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'deepseek/deepseek-chat-v3-0324',
-          messages: [
-            {
-              role: 'system',
-              content: systemPrompt + (langue === 'en' ? '\n\nRespond in English.' : '')
-            },
-            ...newMessages.map(m => ({ role: m.role, content: m.content }))
-          ],
-          temperature: 0.3,
-          max_tokens: 400,
+          langue,
+          messages: newMessages.map(m => ({ role: m.role, content: m.content })),
         })
       })
 
@@ -250,7 +128,7 @@ export default function AIAssistant() {
       .replace(/\n/g, '<br/>')
 
   return (
-    <div className="fixed bottom-24 right-5 z-40 flex flex-col items-end gap-3">
+    <div className="fixed bottom-20 right-4 md:bottom-24 md:right-5 z-40 flex flex-col items-end gap-3">
 
       {/* PANEL CHAT */}
       <AnimatePresence>
@@ -454,7 +332,8 @@ export default function AIAssistant() {
         )}
       </AnimatePresence>
 
-      {/* NOTIFICATION */}
+      {/* NOTIFICATION — cachée sur mobile, elle recouvrait le contenu
+          de la page ; conservée sur desktop où il y a la place */}
       <AnimatePresence>
         {notif && !open && (
           <motion.div
@@ -462,7 +341,7 @@ export default function AIAssistant() {
             animate={{ opacity: 1, x: 0, scale: 1 }}
             exit={{ opacity: 0, x: 20, scale: 0.9 }}
             onClick={() => setOpen(true)}
-            className="relative bg-white text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer max-w-[195px] text-center border border-gray-100"
+            className="hidden md:block relative bg-white text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl cursor-pointer max-w-[195px] text-center border border-gray-100"
             style={{ boxShadow: '0 8px 25px rgba(6,82,128,0.15)' }}
           >
             <Sparkles size={11} className="inline text-[#C9A227] mr-1" />
@@ -477,7 +356,7 @@ export default function AIAssistant() {
         onClick={() => { setOpen(!open); setNotif(false) }}
         whileHover={{ scale: 1.08 }}
         whileTap={{ scale: 0.94 }}
-        className="relative w-12 h-12 rounded-xl flex items-center justify-center"
+        className="relative w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center"
         style={{
           background: 'linear-gradient(135deg, #065280 0%, #0A69AD 100%)',
           boxShadow: '0 8px 25px rgba(6,82,128,0.4)'

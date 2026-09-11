@@ -34,7 +34,7 @@ export default function WhatsAppButton() {
   }
 
   return (
-    <div className="fixed bottom-6 right-5 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-5 right-4 md:bottom-6 md:right-5 z-50 flex flex-col items-end gap-3">
 
       {/* Widget panel */}
       <AnimatePresence>
@@ -104,7 +104,8 @@ export default function WhatsAppButton() {
         )}
       </AnimatePresence>
 
-      {/* Bulle de notification */}
+      {/* Bulle de notification — cachée sur mobile, elle recouvrait le
+          contenu de la page ; conservée sur desktop où il y a la place */}
       <AnimatePresence>
         {notif && !ouvert && (
           <motion.div
@@ -113,7 +114,7 @@ export default function WhatsAppButton() {
             exit={{ opacity: 0, x: 30, scale: 0.8 }}
             transition={{ duration: 0.3 }}
             onClick={() => { setOuvert(true); setNotif(false) }}
-            className="relative bg-white text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors max-w-[180px] text-center"
+            className="hidden md:block relative bg-white text-gray-700 text-xs font-bold px-4 py-2.5 rounded-xl shadow-xl border border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors max-w-[180px] text-center"
           >
             👋 Bonjour ! Besoin d'aide ?
             <div className="absolute -bottom-1.5 right-6 w-3 h-3 bg-white border-r border-b border-gray-100 rotate-45" />
@@ -126,17 +127,17 @@ export default function WhatsAppButton() {
         onClick={() => { setOuvert(!ouvert); setNotif(false) }}
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        className="relative w-14 h-14 bg-[#25D366] hover:bg-[#1ebe5d] rounded-full flex items-center justify-center shadow-2xl transition-colors"
+        className="relative w-12 h-12 md:w-14 md:h-14 bg-[#25D366] hover:bg-[#1ebe5d] rounded-full flex items-center justify-center shadow-2xl transition-colors"
         aria-label="Contacter sur WhatsApp"
       >
         <AnimatePresence mode="wait">
           {ouvert ? (
             <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.15 }}>
-              <X size={26} color="white" />
+              <X size={24} color="white" />
             </motion.div>
           ) : (
             <motion.div key="wa" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.15 }}>
-              <IconWA size={28} color="white" />
+              <IconWA size={24} color="white" />
             </motion.div>
           )}
         </AnimatePresence>
