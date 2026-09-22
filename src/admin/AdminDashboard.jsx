@@ -1192,20 +1192,46 @@ function SectionBlog() {
     setBrouillon(b => ({ ...b, images: (b.images || []).filter((_, i) => i !== idx) }))
   }
 
+  // Envoie la newsletter, sans jamais bloquer l'interface admin si ça échoue
+  const notifierAbonnes = async (article) => {
+    try {
+      await fetch('/.netlify/functions/newsletter-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          titre: article.titre,
+          extrait: article.extrait,
+          image_url: article.image_url,
+        }),
+      })
+    } catch (e) {
+      console.warn('Newsletter non envoyée:', e.message)
+    }
+  }
+
   const sauvegarder = async () => {
     if (!brouillon.titre) { alert('Le titre est obligatoire.'); return }
+    // On ne notifie que lors d'une vraie transition non-publié → publié,
+    // jamais à chaque modification d'un article déjà publié (pas de spam)
+    const etaitDejaPublie = edition !== 'nouveau' && edition.publie
+    const devientPublie = brouillon.publie && !etaitDejaPublie
+
     if (edition === 'nouveau') {
       const result = await store.addBlogArticle(brouillon)
       if (!result) { alert('Erreur Supabase. Vérifiez que la table blog_articles existe.'); return }
+      if (devientPublie) notifierAbonnes(result)
     } else {
       const ok = await store.updateBlogArticle(edition.id, brouillon)
       if (!ok) { alert('Erreur lors de la mise à jour.'); return }
+      if (devientPublie) notifierAbonnes(brouillon)
     }
     setEdition(null); setBrouillon(vide); charger()
   }
 
   const togglePublie = async (article) => {
-    await store.updateBlogArticle(article.id, { publie: !article.publie })
+    const devientPublie = !article.publie
+    await store.updateBlogArticle(article.id, { publie: devientPublie })
+    if (devientPublie) notifierAbonnes(article)
     charger()
   }
 

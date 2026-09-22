@@ -330,12 +330,12 @@ deleteCommentaire: async (id) => {
 // nettoyage s'appuie sur le trafic naturel du site.
 nettoyerVieuxCommentaires: async () => {
   try {
-    const deuxAnsAvant = new Date()
-    deuxAnsAvant.setFullYear(deuxAnsAvant.getFullYear() - 2)
+    const unAnAvant = new Date()
+    unAnAvant.setFullYear(unAnAvant.getFullYear() - 1)
     await supabase
       .from('blog_commentaires')
       .delete()
-      .lt('created_at', deuxAnsAvant.toISOString())
+      .lt('created_at', unAnAvant.toISOString())
   } catch (e) { /* silencieux : ne doit jamais bloquer l'affichage du site */ }
 },
 }

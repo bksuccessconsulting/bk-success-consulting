@@ -49,11 +49,13 @@ function SectionCommentaires({ articleId, commentaires }) {
   const [form, setForm] = useState({ nom: '', email: '', site_web: '', message: '' })
   const [envoi, setEnvoi] = useState(false)
   const [envoye, setEnvoye] = useState(false)
+  const [erreur, setErreur] = useState(false)
 
   const soumettre = async (e) => {
     e.preventDefault()
     if (!form.nom.trim() || !form.email.trim() || !form.message.trim()) return
     setEnvoi(true)
+    setErreur(false)
     const res = await store.addCommentaire({
       article_id: articleId,
       parent_id: null,
@@ -66,6 +68,10 @@ function SectionCommentaires({ articleId, commentaires }) {
     if (res) {
       setEnvoye(true)
       setForm({ nom: '', email: '', site_web: '', message: '' })
+    } else {
+      // Échec réel (ex: table pas encore créée côté Supabase) — on le
+      // montre clairement au lieu de laisser croire que rien ne s'est passé
+      setErreur(true)
     }
   }
 
@@ -96,10 +102,15 @@ function SectionCommentaires({ articleId, commentaires }) {
 
       {envoye ? (
         <div className="bg-green-50 border border-green-200 text-green-700 text-xs rounded-xl p-3">
-          Merci ! Votre commentaire a été envoyé et sera visible après validation par le cabinet.
+          ✅ Merci ! Votre commentaire a bien été envoyé et sera visible après validation par le cabinet.
         </div>
       ) : (
         <form onSubmit={soumettre} className="space-y-2" onClick={(e) => e.stopPropagation()}>
+          {erreur && (
+            <div className="bg-red-50 border border-red-200 text-red-600 text-xs rounded-xl p-3">
+              ⚠️ L'envoi a échoué. Vérifiez votre connexion et réessayez, ou contactez-nous directement sur WhatsApp si le problème persiste.
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <input
               type="text" placeholder="Nom *" required
@@ -374,6 +385,13 @@ export default function Blog() {
                             }`}
                           />
                         </button>
+                      )}
+
+                      {/* Signe visible : on peut commenter en bas de l'article */}
+                      {article.contenu && !estOuvert && (
+                        <p className="text-[11px] text-gray-400 flex items-center gap-1 -mt-1 mb-2">
+                          💬 Donnez votre avis en bas de l'article
+                        </p>
                       )}
                     </div>
 
