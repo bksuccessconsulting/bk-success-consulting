@@ -338,4 +338,64 @@ nettoyerVieuxCommentaires: async () => {
       .lt('created_at', unAnAvant.toISOString())
   } catch (e) { /* silencieux : ne doit jamais bloquer l'affichage du site */ }
 },
+
+// ============================================
+// STATISTIQUES DE VISITE
+// ============================================
+
+// Enregistre une visite. Appelé une seule fois par session de
+// navigation (voir App.jsx) — ne bloque jamais l'affichage du site
+// en cas d'échec.
+logVisite: async (page = '') => {
+  try {
+    await supabase.from('visites_site').insert([{ page }])
+  } catch (e) { /* silencieux */ }
+},
+
+// Renvoie les compteurs jour/semaine/mois + le détail des 14
+// derniers jours pour un petit graphique.
+getStatsVisites: async () => {
+  try {
+    const il_y_a_30_jours = new Date()
+    il_y_a_30_jours.setDate(il_y_a_30_jours.getDate() - 30)
+
+    const { data, error } = await supabase
+      .from('visites_site')
+      .select('created_at')
+      .gte('created_at', il_y_a_30_jours.toISOString())
+    if (error) throw error
+
+    const maintenant = new Date()
+    const debutJour = new Date(maintenant); debutJour.setHours(0, 0, 0, 0)
+    const debutSemaine = new Date(maintenant); debutSemaine.setDate(debutSemaine.getDate() - 7)
+
+    let jour = 0, semaine = 0, mois = 0
+    const parJour = {}
+
+    for (const v of data || []) {
+      const d = new Date(v.created_at)
+      mois++
+      if (d >= debutSemaine) semaine++
+      if (d >= debutJour) jour++
+
+      const cle = d.toISOString().slice(0, 10) // YYYY-MM-DD
+      parJour[cle] = (parJour[cle] || 0) + 1
+    }
+
+    // Série des 14 derniers jours, dans l'ordre, avec les jours à 0
+    // inclus (pour un graphique régulier)
+    const serie14j = []
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(maintenant)
+      d.setDate(d.getDate() - i)
+      const cle = d.toISOString().slice(0, 10)
+      serie14j.push({ date: cle, total: parJour[cle] || 0 })
+    }
+
+    return { jour, semaine, mois, serie14j }
+  } catch (e) {
+    console.error('Stats visites:', e.message)
+    return { jour: 0, semaine: 0, mois: 0, serie14j: [] }
+  }
+},
 }

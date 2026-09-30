@@ -2086,6 +2086,7 @@ export default function AdminDashboard() {
   const [actif, setActif] = useState('accueil')
   const [menuMobileOuvert, setMenuMobileOuvert] = useState(false)
   const [dashStats, setDashStats] = useState(null)
+  const [statsVisites, setStatsVisites] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -2113,6 +2114,7 @@ export default function AdminDashboard() {
         articlesPublies: (b || []).filter(x => x.publie).length,
       })
     })
+    store.getStatsVisites().then(setStatsVisites)
   }, [actif])
 
   const deconnexion = () => { clearAdminSession(); navigate('/admin', { replace: true }) }
@@ -2217,6 +2219,49 @@ export default function AdminDashboard() {
                   </button>
                 )
               })}
+            </div>
+
+            {/* VISITES DU SITE */}
+            <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4">
+              <h3 className="font-black text-[#065280] text-sm mb-4">Visites du site</h3>
+
+              <div className="grid grid-cols-3 gap-3 mb-5">
+                {[
+                  { label: "Aujourd'hui", valeur: statsVisites?.jour },
+                  { label: '7 derniers jours', valeur: statsVisites?.semaine },
+                  { label: '30 derniers jours', valeur: statsVisites?.mois },
+                ].map((s) => (
+                  <div key={s.label} className="bg-[#F4F6F8] rounded-xl p-3.5 text-center">
+                    <p className="text-2xl font-black text-[#065280]">
+                      {statsVisites === null ? <span className="inline-block w-8 h-6 bg-gray-200 rounded animate-pulse mx-auto" /> : (s.valeur ?? 0)}
+                    </p>
+                    <p className="text-gray-500 text-[11px] mt-1 font-semibold">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+
+              {statsVisites?.serie14j?.length > 0 && (
+                <div>
+                  <p className="text-gray-400 text-[11px] font-semibold mb-2">14 derniers jours</p>
+                  <div className="flex items-end gap-1.5 h-24">
+                    {(() => {
+                      const max = Math.max(1, ...statsVisites.serie14j.map(j => j.total))
+                      return statsVisites.serie14j.map((j) => (
+                        <div key={j.date} className="flex-1 flex flex-col items-center gap-1 group relative">
+                          <div
+                            className="w-full bg-[#0A69AD] rounded-t-md hover:bg-[#C9A227] transition-colors"
+                            style={{ height: `${Math.max(4, (j.total / max) * 80)}px` }}
+                            title={`${j.total} visite(s) le ${new Date(j.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}`}
+                          />
+                          <span className="text-[9px] text-gray-400">
+                            {new Date(j.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
+                          </span>
+                        </div>
+                      ))
+                    })()}
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-white border border-gray-100 rounded-2xl p-5 mb-4">

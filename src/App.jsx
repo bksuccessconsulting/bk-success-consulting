@@ -1,6 +1,7 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useEffect, useState } from 'react'
 import { AnimatePresence } from 'framer-motion'
+import { store } from './data/contentStore'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import WhatsAppButton from './components/WhatsAppButton'
@@ -18,7 +19,21 @@ import Quiz from './pages/Quiz'
 import AdminLogin from './admin/AdminLogin'
 import AdminDashboard from './admin/AdminDashboard'
 
+// Enregistre une visite une seule fois par session de navigation
+// (pas à chaque changement de page) — compteur anonyme, aucune
+// donnée personnelle.
+function useTrackerVisite() {
+  const location = useLocation()
+  useEffect(() => {
+    if (!sessionStorage.getItem('bksc_visite_enregistree')) {
+      store.logVisite(location.pathname)
+      sessionStorage.setItem('bksc_visite_enregistree', '1')
+    }
+  }, [])
+}
+
 function PublicLayout({ children }) {
+  useTrackerVisite()
   return (
     <>
       <Navbar />
